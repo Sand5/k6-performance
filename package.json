@@ -1,0 +1,19 @@
+{
+  "name": "k6_performance",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "mock:api": "json-server --watch k6-tests/db.json --port 3000",
+    "k6:smoke": "node createReportsDir.js && K6_WEB_DASHBOARD=true K6_WEB_DASHBOARD_EXPORT=k6-tests/reports/smoke-report.html k6 run k6-tests/tests/smoke.test.js",
+    "k6:load": "node createReportsDir.js && K6_WEB_DASHBOARD=true K6_WEB_DASHBOARD_EXPORT=k6-tests/reports/load-report.html k6 run k6-tests/tests/load.test.js",
+    "k6:spike": "node createReportsDir.js && K6_WEB_DASHBOARD=true K6_WEB_DASHBOARD_EXPORT=k6-tests/reports/spike-report.html k6 run k6-tests/tests/spike.test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "json-server": "^1.0.0-beta.5"
+  }
+}

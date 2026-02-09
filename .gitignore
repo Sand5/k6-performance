@@ -1,0 +1,10 @@
+# Ignore node_modules
+node_modules/
+.DS_Store
+
+# Ignore K6 test reports
+k6-tests/reports/
+
+# Ignore custom folders
+basic-k6/
+http-k6/
