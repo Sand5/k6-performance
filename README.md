@@ -4,25 +4,26 @@ This project contains performance tests for your API using [k6](https://k6.io/).
 
 # Project Structure
 
+# Project Structure
+
+```text
 k6_performance/
 ├─ k6-tests/
 │  ├─ tests/
-│  │  └─ smoke.test.js        # Main k6 test script
-│  └─ reports/                # Generated test reports (ignored by Git)
+│  │  └─ smoke.test.js          # Main k6 test script
+│  └─ reports/                  # Generated test reports (ignored by Git)
 ├─ utils/
-│  ├─ checks.js               # Standard checks for responses
-│  └─ metrics.js              # Custom metrics like errorRate and requestCount
+│  ├─ checks.js                 # Standard checks for responses
+│  └─ metrics.js                # Custom metrics like errorRate and requestsCount
 ├─ config/
-│  └─ environments.js         # Environment-specific base URLs
-├─ createReportsDir.js        # Script to create the reports folder
-├─ package.json               # npm project config
-├─ README.md                  # Project documentation
-└─ .gitignore                 # Git ignore file (ignores node_modules, reports, basic-k6, http-k6)
+│  └─ environments.js           # Environment-specific base URLs
+├─ createReportsDir.js          # Script to create the reports folder
+├─ package.json                 # npm project config
+├─ README.md                    # Project documentation
+└─ .gitignore                   # Git ignore file (ignores node_modules, reports, basic-k6, http-k6)
 
 
-
-
-# How to Run Tests
+# How to Run Testsµ
 
 1. Install dependencies:
 npm install
