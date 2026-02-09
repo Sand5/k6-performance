@@ -1,0 +1,29 @@
+name: K6 Performance Tests
+
+# Define when this workflow should run
+on:
+  push:       # Trigger on any push to the repo
+    branches:
+      - main
+  pull_request:  # Trigger on PRs
+    branches:
+      - main
+
+jobs:
+  smoke-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run k6 smoke tests
+        run: npm run k6:smoke
