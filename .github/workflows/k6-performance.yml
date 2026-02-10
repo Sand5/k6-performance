@@ -1,13 +1,10 @@
 name: K6 Performance Tests
 
-# Define when this workflow should run
 on:
-  push:       # Trigger on any push to the repo
-    branches:
-      - main
-  pull_request:  # Trigger on PRs
-    branches:
-      - main
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   smoke-tests:
@@ -15,12 +12,15 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20
+
+      - name: Install k6
+        uses: grafana/setup-k6-action@v1
 
       - name: Install dependencies
         run: npm install
@@ -34,3 +34,4 @@ jobs:
         with:
           name: k6-smoke-report
           path: k6-tests/reports/smoke-report.html
+
