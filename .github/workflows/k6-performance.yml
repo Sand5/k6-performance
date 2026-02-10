@@ -30,7 +30,7 @@ jobs:
 
       - name: Upload k6 smoke report
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: k6-smoke-report
           path: k6-tests/reports/smoke-report.html
