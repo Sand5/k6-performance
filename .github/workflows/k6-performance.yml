@@ -27,3 +27,10 @@ jobs:
 
       - name: Run k6 smoke tests
         run: npm run k6:smoke
+
+      - name: Upload k6 smoke report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: k6-smoke-report
+          path: k6-tests/reports/smoke-report.html
