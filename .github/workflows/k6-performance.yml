@@ -25,13 +25,26 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      # ----------------------------
+      # Start mock API in the background
+      # ----------------------------
+      - name: Start mock API
+        run: |
+          npm run mock:api &          # background the server
+          npx wait-on http://localhost:3000   # wait until server is ready
+
+      # ----------------------------
+      # Run k6 smoke tests
+      # ----------------------------
       - name: Run k6 smoke tests
         run: npm run k6:smoke
 
+      # ----------------------------
+      # Upload k6 report
+      # ----------------------------
       - name: Upload k6 smoke report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: k6-smoke-report
           path: k6-tests/reports/smoke-report.html
-
