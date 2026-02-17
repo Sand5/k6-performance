@@ -5,19 +5,52 @@ This project contains performance tests for your API using [k6](https://k6.io/).
 # Project Structure
 ```text
 k6_performance/
-├─ k6-tests/
-│  ├─ tests/
-│  │  └─ smoke.test.js          # Main k6 test script
-│  └─ reports/                  # Generated test reports (ignored by Git)
-├─ utils/
-│  ├─ checks.js                 # Standard checks for responses
-│  └─ metrics.js                # Custom metrics like errorRate and requestsCount
-├─ config/
-│  └─ environments.js           # Environment-specific base URLs
-├─ createReportsDir.js          # Script to create the reports folder
-├─ package.json                 # npm project config
-├─ README.md                    # Project documentation
-└─ .gitignore                   # Git ignore file (ignores node_modules, reports, basic-k6, http-k6)
+├── .github/
+│   └── workflows/
+│       └── k6-performance.yml     # GitHub Actions CI workflow for k6 tests
+├── .vscode/
+│   └── settings.json              # VS Code workspace settings
+├── basic-k6/
+│   ├── breakpoint-test.js         # Breakpoint / capacity discovery test
+│   ├── custom-metrics.js          # Examples of custom k6 metrics
+│   ├── first-script.js            # Intro / learning k6 script
+│   ├── load-test.js               # Basic load test example
+│   ├── scenarios.js               # Scenario configuration examples
+│   ├── smoke-test.js              # Basic smoke test example
+│   ├── soak-test.js               # Long-running soak test example
+│   ├── spike-test.js              # Sudden traffic spike test example
+│   ├── stress-test.js             # Stress test to find system limits
+│   └── system-tags.js             # k6 system tags examples
+├── http-k6/
+│   ├── env-var.js                 # Environment variable usage example
+│   ├── http-get.js                # HTTP GET request example
+│   ├── http-post.js               # HTTP POST request example
+│   └── random-item.js             # Randomized test data example
+├── k6-tests/
+│   ├── config/
+│   │   ├── environments.js        # Environment-specific base URLs
+│   │   ├── testData.js            # Shared test data and fixtures
+│   │   └── thresholds.js          # Centralized k6 performance thresholds
+│   ├── reports/                   # Generated k6 HTML reports (ignored by Git)
+│   │   └── smoke-report.html      # Smoke test HTML report (CI artifact)
+│   ├── scenarios/
+│   │   ├── crud.scenario.js       # CRUD user journey scenario
+│   │   └── login.scenario.js      # Login flow scenario
+│   ├── tests/
+│   │   ├── load.test.js           # Load test entry point
+│   │   ├── smoke.test.js          # Smoke test entry point
+│   │   └── spike.test.js          # Spike test entry point
+│   ├── utils/
+│   │   ├── checks.js              # Standard response checks (status, timing)
+│   │   └── metrics.js             # Custom metrics (error rate, request count)
+│   └── db.json                    # Mock / local API test data
+├── .DS_Store                      # macOS system file (ignored)
+├── .gitignore                     # Git ignore rules (node_modules, reports, etc.)
+├── README.md                      # Project documentation
+├── createReportsDir.js            # Ensures reports directory exists before runs
+├── package-lock.json              # npm dependency lock file
+└── package.json                   # npm scripts and dependencies
+
 
 
 DELETE requests are expected to return 200 instead of 204 due to API behavior.
@@ -34,6 +67,9 @@ npm install
 npm run k6:smoke
 
 This will generate a report in k6-tests/reports/smoke-report.html and launch a local K6 dashboard.
+
+3. When run in CI, the smoke test generates an HTML report that is uploaded 
+as a GitHub Actions artifact. Download it from the workflow run summary.
 
 # Standard Checks
 
