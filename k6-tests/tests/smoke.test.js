@@ -4,7 +4,7 @@ import { smokeThresholds } from '../config/thresholds.js';
 
 export const options = {
   vus: 1,
-  duration: '30s',
+  duration: '25s',
   thresholds: smokeThresholds,
 };
 
