@@ -83,14 +83,14 @@ Generates a report in k6-tests/reports/smoke-report.html and launches a local K6
 as a GitHub Actions artifact. Download it from the workflow run summary.
 
 # Docker
-- Build the Docker image
+1. Build the Docker image
 docker build -t k6-tests .
 
 -t k6-tests gives the image a friendly name.
 
-Run this in the same directory as your Dockerfile.
+2. Run this in the same directory as your Dockerfile.
 
-- Run smoke test (with mock API + dashboard)
+3. Run smoke test (with mock API + dashboard)
 docker run --rm -it k6-tests
 
 The default CMD in your Dockerfile runs:
@@ -98,11 +98,15 @@ npm run mock:api & wait-on http://localhost:3000 && npm run k6:smoke
 
 So it:
 
-1 Starts the mock API
-2 Waits for it to be ready
-3 Runs the K6 smoke test with HTML report + dashboard
-4 --rm removes the container when done.
-5 -it keeps it interactive (you see logs live).
+1. Starts the mock API
+
+2. Waits for it to be ready
+
+3. Runs the K6 smoke test with HTML report + dashboard
+
+4. --rm removes the container when done.
+
+5. -it keeps it interactive (you see logs live).
 
 Optional: Run other test types
 
