@@ -67,16 +67,16 @@ npm install
 npm run k6:smoke or npm run k6:smoke:local - This command also starts the sever
 Generates a report in k6-tests/reports/smoke-report.html and launches a local K6 dashboard.
 
-Note: The mock API logs every request by default, which can be verbose.
-To reduce console output, you can run the mock API in “quiet” mode:
+- Note: The mock API logs every request by default, which can be verbose.
+  To reduce console output, you can run the mock API in “quiet” mode:
 
-npm run mock:api -- --quiet
+- npm run mock:api -- --quiet
 
-npm run k6:spike or npm run k6:spike:local
-Generates a report in k6-tests/reports/spike-report.html and launches a local K6 dashboard.
+- npm run k6:spike or npm run k6:spike:local
+  Generates a report in k6-tests/reports/spike-report.html and launches a local K6 dashboard.
 
-npm run k6:load or npm run k6:load:local
-Generates a report in k6-tests/reports/smoke-report.html and launches a local K6 dashboard.
+- npm run k6:load or npm run k6:load:local
+  Generates a report in k6-tests/reports/smoke-report.html and launches a local K6 dashboard.
 
 
 3. When run in CI, the smoke test generates an HTML report that is uploaded 
