@@ -1,47 +1,90 @@
-name: K6 Performance Tests
+# --------------------------------------------
+# Workflow Name
+# --------------------------------------------
+# This is the name displayed in the GitHub Actions UI
+name: K6 Performance Tests (Docker)
 
+# --------------------------------------------
+# Workflow Triggers
+# --------------------------------------------
+# Run this workflow:
+# 1. On every push to main
+# 2. On every pull request targeting main
+# This helps prevent performance regressions
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
 
+# --------------------------------------------
+# Jobs Section
+# --------------------------------------------
 jobs:
   smoke-tests:
+
+    # Use a fresh Ubuntu virtual machine provided by GitHub
+    # Docker is preinstalled on this runner
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+
+      # --------------------------------------------
+      # Step 1: Checkout Repository Code
+      # --------------------------------------------
+      # This pulls your repository into the runner
+      # Without this step, Docker would have nothing to build
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
+      # --------------------------------------------
+      # Step 2: Build Docker Image
+      # --------------------------------------------
+      # Builds the Docker image using your Dockerfile
+      # -t k6-tests gives the image a friendly name
+      # The "." means build from the current directory
+      - name: Build Docker image
+        run: docker build -t k6-tests .
 
-      - name: Install k6
-        uses: grafana/setup-k6-action@v1
-
-      - name: Install dependencies
-        run: npm install
-
-      # ----------------------------
-      # Start mock API in the background
-      # ----------------------------
-      - name: Start mock API
+      # --------------------------------------------
+      # Step 3: Run Smoke Test Inside Docker Container
+      # --------------------------------------------
+      # docker run starts a container from the built image
+      #
+      # --rm:
+      #   Automatically removes the container after it finishes
+      #
+      # -v:
+      #   Mounts a volume from the GitHub runner into the container.
+      #   This allows the generated HTML report to persist
+      #   outside the container so it can be uploaded.
+      #
+      # ${{ github.workspace }}:
+      #   Points to the repository directory on the GitHub runner.
+      #
+      # Because we do NOT override the command,
+      # Docker will run the default CMD defined in the Dockerfile:
+      #
+      #   npm run mock:api &
+      #   wait for API
+      #   npm run k6:smoke
+      #
+      - name: Run smoke test inside Docker
         run: |
-          npm run mock:api &          # background the server
-          npx wait-on http://localhost:3000   # wait until server is ready
+          docker run --rm \
+            -v ${{ github.workspace }}/k6-tests/reports:/app/k6-tests/reports \
+            k6-tests
 
-      # ----------------------------
-      # Run k6 smoke tests
-      # ----------------------------
-      - name: Run k6 smoke tests
-        run: npm run k6:smoke
-
-      # ----------------------------
-      # Upload k6 report
-      # ----------------------------
+      # --------------------------------------------
+      # Step 4: Upload k6 HTML Report
+      # --------------------------------------------
+      # if: always()
+      #   Ensures the report is uploaded even if the test fails.
+      #
+      # actions/upload-artifact:
+      #   Saves the HTML report as a downloadable artifact
+      #   inside the GitHub Actions run summary.
+      #
       - name: Upload k6 smoke report
         if: always()
         uses: actions/upload-artifact@v4
