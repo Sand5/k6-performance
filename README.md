@@ -52,7 +52,6 @@ k6_performance/
 └── package.json                   # npm scripts and dependencies
 
 
-
 DELETE requests are expected to return 200 instead of 204 due to API behavior.
 
 Make sure your server is running locally before running the tests.
@@ -119,23 +118,15 @@ Using Docker demonstrates professional best practices:
 - Mirrors **real-world DevOps pipelines** (CI/CD often runs in containers)  
 - Separates local development from test execution, avoiding conflicts  
 
-
-This shows you understand containerization, environment isolation, and test reproducibility.
-
 # Standard Checks
-
 
 All responses are validated using standardChecks:
 
 Status code is between 200–299
-
 Response time is less than 500ms
-
 Logs failures to console for debugging
 
-
 # Metrics
-
 
 This project tracks several custom metrics in K6:
 
@@ -144,7 +135,6 @@ This project tracks several custom metrics in K6:
 - `login_duration` – Trend metric that measures login request duration
 
 Example of how a metric is defined:
-
 
 import { Trend } from 'k6/metrics';
 
