@@ -1,0 +1,18 @@
+# Ignore Node modules (installed inside container)
+node_modules
+
+# Ignore reports (generated files)
+k6-tests/reports
+
+# Git metadata
+.git
+.gitignore
+
+# macOS system files
+.DS_Store
+
+# VS Code workspace settings
+.vscode
+
+# Any logs
+*.log

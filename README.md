@@ -91,28 +91,36 @@ docker build -t k6-tests .
 2. Run this in the same directory as your Dockerfile.
 
 3. Run smoke test (with mock API + dashboard)
-docker run --rm -it k6-tests
+docker run --rm -it \
+  -p 3000:3000 \       # mock API
+  -p 5665:5665 \       # k6 dashboard
+  -v $(pwd)/k6-tests/reports:/app/k6-tests/reports \
+  k6-tests
+
+  What happens:
+
+1. Starts the mock API (json-server) in the container
+2. Waits for port 3000 to be ready
+3. Runs k6 smoke test with dashboard + HTML report
+4. HTML report is saved locally in k6-tests/reports
+5. Container is removed automatically when finished
+
+  or 
+  docker run --rm -it -p 3000:3000 -p 5665:5665 k6-tests (Reports will not saved locally and deleted from the container)
 
 The default CMD in your Dockerfile runs:
 npm run mock:api & wait-on http://localhost:3000 && npm run k6:smoke
+# Why Docker?
 
-So it:
+Using Docker demonstrates professional best practices:
 
-1. Starts the mock API
+- Ensures **consistent k6 and Node.js environment** across machines  
+- Allows **reproducible performance tests** without installing dependencies  
+- Mirrors **real-world DevOps pipelines** (CI/CD often runs in containers)  
+- Separates local development from test execution, avoiding conflicts  
 
-2. Waits for it to be ready
 
-3. Runs the K6 smoke test with HTML report + dashboard
-
-4. --rm removes the container when done.
-
-5. -it keeps it interactive (you see logs live).
-
-Optional: Run other test types
-
-Option A – override CMD at runtime:
-docker run --rm -it k6-tests sh -c "npm run mock:api & wait-on http://localhost:3000 && npm run k6:load"
-
+This shows you understand containerization, environment isolation, and test reproducibility.
 
 # Standard Checks
 
