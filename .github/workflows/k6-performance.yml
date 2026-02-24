@@ -50,38 +50,49 @@ jobs:
         run: docker build -t k6-tests .
 
       # --------------------------------------------
-      # Step 3: Run Smoke Test with Docker Compose
+      # Step 3: Start Mock API Service with Docker Compose
       # --------------------------------------------
-      - name: Run smoke test with Docker Compose
+      - name: Start mock API service
         run: |
-          # Set environment variables
           ENV_NAME=${{ matrix.environment }}
           MOCK_SERVICE="mock-${ENV_NAME}"
 
           echo "Starting mock API service: $MOCK_SERVICE"
           docker compose up -d $MOCK_SERVICE
 
-          # Determine mock API port
+          # Determine port (used for info only, k6 will resolve service name internally)
           if [ "$ENV_NAME" = "local" ]; then
             MOCK_PORT=3000
           else
             MOCK_PORT=4000
           fi
+          echo "Mock service $MOCK_SERVICE should be available on port $MOCK_PORT"
 
-          echo "Running k6 smoke test against $MOCK_SERVICE on port $MOCK_PORT"
-          docker run --rm \
-            -v ${{ github.workspace }}/k6-tests/reports:/app/k6-tests/reports \
+      # --------------------------------------------
+      # Step 4: Run k6 Smoke Test on Same Docker Compose Network
+      # --------------------------------------------
+      - name: Run k6 smoke test
+        run: |
+          ENV_NAME=${{ matrix.environment }}
+          MOCK_SERVICE="mock-${ENV_NAME}"
+
+          echo "Running k6 smoke test against $MOCK_SERVICE"
+
+          # Use docker compose run so k6 container is on the same network as mocks
+          docker compose run --rm \
             -e ENV=$ENV_NAME \
-            k6-tests \
-            sh -c "npx wait-on http://$MOCK_SERVICE:$MOCK_PORT && npm run k6:smoke"
-
-          # Tear down mock service after test
-          docker compose down
+            k6 \
+            sh -c "npx wait-on http://$MOCK_SERVICE && npm run k6:smoke"
 
       # --------------------------------------------
-      # Step 4: Upload k6 HTML Report
+      # Step 5: Tear Down Mock Service
       # --------------------------------------------
-      # if: always() ensures the report is uploaded even if the test fails
+      - name: Tear down mock service
+        run: docker compose down
+
+      # --------------------------------------------
+      # Step 6: Upload k6 HTML Report
+      # --------------------------------------------
       - name: Upload k6 smoke report
         if: always()
         uses: actions/upload-artifact@v4
