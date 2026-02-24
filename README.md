@@ -96,12 +96,12 @@ docker run --rm -it \
 4. Run Multiple Environments with Docker Compose
 # Local environment
 ENV_NAME=local docker-compose up -d mock-local
-docker compose run --rm -v $(pwd)/k6-tests/reports:/app/k6-tests/reports -e ENV=$ENV_NAME k6 sh -c "npx wait-on http://mock-local && npm run k6:smoke"
+docker compose run --rm -v $(pwd)/k6-tests/reports:/app/k6-tests/reports -e ENV=$ENV_NAME k6 sh -c "npx wait-on http://mock-local:3000 && npm run k6:smoke"
 docker-compose down
 
 # QA environment
 ENV_NAME=qa docker-compose up -d mock-qa
-docker compose run --rm -v $(pwd)/k6-tests/reports:/app/k6-tests/reports -e ENV=$ENV_NAME k6 sh -c "npx wait-on http://mock-qa && npm run k6:smoke"
+docker compose run --rm -v $(pwd)/k6-tests/reports:/app/k6-tests/reports -e ENV=$ENV_NAME k6 sh -c "npx wait-on http://mock-qa:4000 && npm run k6:smoke"
 docker-compose down
 
 Notes:
@@ -116,7 +116,8 @@ Running the Dockerfile directly runs default CMD in your Dockerfile:
 npm run mock:api & wait-on http://localhost:3000 && npm run k6:smoke
 
 # Default Docker Compose Behavior
-Compose starts the mock API as a named service (e.g., mock-local or mock-qa), so k6 connects using the service name instead of localhost. 
+Compose starts the mock API as a named service (e.g., mock-local or mock-qa), 
+so k6 connects using the service name instead of localhost. 
 
 Example: docker-compose up -d mock-local
 docker run --rm -v $(pwd)/k6-tests/reports:/app/k6-tests/reports -e ENV=local k6-tests sh -c "npx wait-on http://mock-local:3000 && npm run k6:smoke"
