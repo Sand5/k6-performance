@@ -11,6 +11,18 @@
       "username": "newowner",
       "password": "secret123",
       "role": "owner"
+    },
+    {
+      "id": "2ff9",
+      "username": "bob",
+      "password": "password123",
+      "role": "user"
+    },
+    {
+      "id": "f000",
+      "username": "alice",
+      "password": "password123",
+      "role": "user"
     }
   ],
   "posts": [

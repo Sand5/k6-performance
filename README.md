@@ -10,22 +10,6 @@ k6_performance/
 │       └── k6-performance.yml     # GitHub Actions CI workflow for k6 tests
 ├── .vscode/
 │   └── settings.json              # VS Code workspace settings
-├── basic-k6/
-│   ├── breakpoint-test.js         # Breakpoint / capacity discovery test
-│   ├── custom-metrics.js          # Examples of custom k6 metrics
-│   ├── first-script.js            # Intro / learning k6 script
-│   ├── load-test.js               # Basic load test example
-│   ├── scenarios.js               # Scenario configuration examples
-│   ├── smoke-test.js              # Basic smoke test example
-│   ├── soak-test.js               # Long-running soak test example
-│   ├── spike-test.js              # Sudden traffic spike test example
-│   ├── stress-test.js             # Stress test to find system limits
-│   └── system-tags.js             # k6 system tags examples
-├── http-k6/
-│   ├── env-var.js                 # Environment variable usage example
-│   ├── http-get.js                # HTTP GET request example
-│   ├── http-post.js               # HTTP POST request example
-│   └── random-item.js             # Randomized test data example
 ├── k6-tests/
 │   ├── config/
 │   │   ├── environments.js        # Environment-specific base URLs

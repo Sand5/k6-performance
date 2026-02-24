@@ -4,16 +4,41 @@
   "description": "",
   "main": "index.js",
 "scripts": {
-  "mock:api": "json-server --watch k6-tests/db.json --port 3000",
-  "mock:api:quiet": "json-server --watch k6-tests/db.json --port 3000 > /dev/null 2>&1",
+  "mock:api:local": "json-server --watch k6-tests/db.json --port 3000",
+  "mock:api:qa": "json-server --watch k6-tests/db.json --port 4000",
+  "mock:api:prod": "json-server --watch k6-tests/db.json --port 5000",
+  
+  "mock:api:quiet:local": "json-server --watch k6-tests/db.json --port 3000 > /dev/null 2>&1",
+  "mock:api:quiet:qa": "json-server --watch k6-tests/db.json --port 4000 > /dev/null 2>&1",
+  "mock:api:quiet:prod": "json-server --watch k6-tests/db.json --port 5000 > /dev/null 2>&1",
 
   "k6:smoke": "node createReportsDir.js && K6_WEB_DASHBOARD=true K6_WEB_DASHBOARD_EXPORT=k6-tests/reports/smoke-report.html k6 run k6-tests/tests/smoke.test.js",
   "k6:load": "node createReportsDir.js && K6_WEB_DASHBOARD=true K6_WEB_DASHBOARD_EXPORT=k6-tests/reports/load-report.html k6 run k6-tests/tests/load.test.js",
   "k6:spike": "node createReportsDir.js && K6_WEB_DASHBOARD=true K6_WEB_DASHBOARD_EXPORT=k6-tests/reports/spike-report.html k6 run k6-tests/tests/spike.test.js",
 
-  "k6:smoke:local": "concurrently -k -s last \"npm run mock:api:quiet\" \"wait-on http://localhost:3000 && npm run k6:smoke\"",
-  "k6:load:local": "concurrently -k -s last \"npm run mock:api:quiet\" \"wait-on http://localhost:3000 && npm run k6:load\"",
-  "k6:spike:local": "concurrently -k -s last \"npm run mock:api:quiet\" \"wait-on http://localhost:3000 && npm run k6:spike\""
+  "k6:smoke:dev": "cross-env ENV=local npm run k6:smoke",
+  "k6:smoke:qa": "cross-env ENV=qa npm run k6:smoke",
+  "k6:smoke:prod": "cross-env ENV=prod npm run k6:smoke",
+
+  "k6:load:dev": "cross-env ENV=local npm run k6:load",
+  "k6:load:qa": "cross-env ENV=qa npm run k6:load",
+  "k6:load:prod": "cross-env ENV=prod npm run k6:load",
+
+  "k6:spike:dev": "cross-env ENV=local npm run k6:spike",
+  "k6:spike:qa": "cross-env ENV=qa npm run k6:spike",
+  "k6:spike:prod": "cross-env ENV=prod npm run k6:spike",
+
+  "k6:smoke:local": "concurrently -k -s last \"npm run mock:api:quiet:local\" \"wait-on http://localhost:3000 && cross-env ENV=local npm run k6:smoke\"",
+  "k6:load:local": "concurrently -k -s last \"npm run mock:api:quiet:local\" \"wait-on http://localhost:3000 && cross-env ENV=local npm run k6:load\"",
+  "k6:spike:local": "concurrently -k -s last \"npm run mock:api:quiet:local\" \"wait-on http://localhost:3000 && cross-env ENV=local npm run k6:spike\"",
+
+  "k6:smoke:qa:local": "concurrently -k -s last \"npm run mock:api:quiet:qa\" \"wait-on http://localhost:4000 && cross-env ENV=qa npm run k6:smoke\"",
+  "k6:load:qa:local": "concurrently -k -s last \"npm run mock:api:quiet:qa\" \"wait-on http://localhost:4000 && cross-env ENV=qa npm run k6:load\"",
+  "k6:spike:qa:local": "concurrently -k -s last \"npm run mock:api:quiet:qa\" \"wait-on http://localhost:4000 && cross-env ENV=qa npm run k6:spike\"",
+
+  "k6:smoke:prod:local": "concurrently -k -s last \"npm run mock:api:quiet:prod\" \"wait-on http://localhost:5000 && cross-env ENV=prod npm run k6:smoke\"",
+  "k6:load:prod:local": "concurrently -k -s last \"npm run mock:api:quiet:prod\" \"wait-on http://localhost:5000 && cross-env ENV=prod npm run k6:load\"",
+  "k6:spike:prod:local": "concurrently -k -s last \"npm run mock:api:quiet:prod\" \"wait-on http://localhost:5000 && cross-env ENV=prod npm run k6:spike\""
 },
   "keywords": [],
   "author": "",
@@ -21,6 +46,7 @@
   "type": "commonjs",
   "devDependencies": {
     "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
     "json-server": "^1.0.0-beta.5",
     "wait-on": "^9.0.4"
   }
