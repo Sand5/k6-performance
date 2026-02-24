@@ -7,7 +7,7 @@ name: K6 Performance Tests (Docker)
 # Workflow Triggers
 # --------------------------------------------
 on:
-  workflow_dispatch:        # manual trigger only
+  workflow_dispatch:        # manual trigger
   push:
     branches: [ main ]      # only on pushes to main
   pull_request:
@@ -50,7 +50,14 @@ jobs:
 
           echo "Starting mock API service: $MOCK_SERVICE"
           docker compose up -d $MOCK_SERVICE
-          echo "Mock service $MOCK_SERVICE started."
+          
+          # Inform which internal port Compose service is listening on
+          if [ "$ENV_NAME" = "local" ]; then
+            MOCK_PORT=3000
+          else
+            MOCK_PORT=4000
+          fi
+          echo "Mock service $MOCK_SERVICE should be reachable at port $MOCK_PORT within Compose network"
 
       # --------------------------------------------
       # Step 4: Run k6 Smoke Test on Same Docker Compose Network
@@ -69,6 +76,8 @@ jobs:
 
           echo "Running k6 smoke test against $MOCK_SERVICE on port $MOCK_PORT"
 
+          # Use docker compose run so k6 container is on the same network as mocks
+          # Wait-on ensures the mock service is up before running k6
           docker compose run --rm \
             -e ENV=$ENV_NAME \
             k6 \
