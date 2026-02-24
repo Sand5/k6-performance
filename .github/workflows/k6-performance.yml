@@ -61,7 +61,7 @@ jobs:
           echo "Starting mock API service: $MOCK_SERVICE"
           docker compose up -d $MOCK_SERVICE
 
-          # Determine port based on environment
+          # Determine mock API port
           if [ "$ENV_NAME" = "local" ]; then
             MOCK_PORT=3000
           else
@@ -81,6 +81,7 @@ jobs:
       # --------------------------------------------
       # Step 4: Upload k6 HTML Report
       # --------------------------------------------
+      # if: always() ensures the report is uploaded even if the test fails
       - name: Upload k6 smoke report
         if: always()
         uses: actions/upload-artifact@v4

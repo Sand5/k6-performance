@@ -66,14 +66,15 @@ Generates a report in k6-tests/reports/smoke-report.html and launches a local K6
 as a GitHub Actions artifact. Download it from the workflow run summary.
 
 # Docker
+
 1. Build the Docker image
 docker build -t k6-tests .
+(Note Run this command in the same directory as your Dockerfile.)
 
 -t k6-tests gives the image a friendly name.
 
-2. Run this in the same directory as your Dockerfile.
 
-3. Run smoke test (with mock API + dashboard)
+2. Run Smoke Test with Mock API (single environment)
 docker run --rm -it \
   -p 3000:3000 \       # mock API
   -p 5665:5665 \       # k6 dashboard
@@ -89,10 +90,31 @@ docker run --rm -it \
 5. Container is removed automatically when finished
 
   or 
-  docker run --rm -it -p 3000:3000 -p 5665:5665 k6-tests (Reports will not saved locally and deleted from the container)
+  docker run --rm -it -p 3000:3000 -p 5665:5665 k6-tests -
+  (Reports will not saved locally and deleted from the container)
+
+4. Run Multiple Environments with Docker Compose
+# Local environment
+ENV_NAME=local docker-compose up -d mock-local
+docker run --rm -v $(pwd)/k6-tests/reports:/app/k6-tests/reports -e ENV=$ENV_NAME k6-tests sh -c "npx wait-on http://mock-local:3000 && npm run k6:smoke"
+docker-compose down
+
+# QA environment
+ENV_NAME=qa docker-compose up -d mock-qa
+docker run --rm -v $(pwd)/k6-tests/reports:/app/k6-tests/reports -e ENV=$ENV_NAME k6-tests sh -c "npx wait-on http://mock-qa:4000 && npm run k6:smoke"
+docker-compose down
+
+Notes:
+
+mock-local → uses port 3000
+mock-qa → uses port 4000
+Reports are saved locally for each run under k6-tests/reports
+Docker Compose ensures multiple mock APIs can run independently and be torn down after tests
+Change the ENV variable to switch which environment your k6 tests target
 
 The default CMD in your Dockerfile runs:
 npm run mock:api & wait-on http://localhost:3000 && npm run k6:smoke
+
 # Why Docker?
 
 Using Docker demonstrates professional best practices:
