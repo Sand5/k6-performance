@@ -1,45 +1,84 @@
-version: '3.9'
+name: K6 Performance Tests (Docker)
 
-services:
-  mock-local:
-    image: k6-tests
-    working_dir: /app
-    environment:
-      ENV: local
-    command: sh -c "npx json-server --watch db.json --port 3000"
-    volumes:
-      - ./k6-tests:/app
-    ports:
-      - "3001:3000"
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
-  mock-qa:
-    image: k6-tests
-    working_dir: /app
-    environment:
-      ENV: qa
-    command: sh -c "npx json-server --watch db.json --port 4000"
-    volumes:
-      - ./k6-tests:/app
-    ports:
-      - "3002:4000"
+jobs:
+  smoke-tests:
+    runs-on: ubuntu-latest
 
-  mock-prod:
-    image: k6-tests
-    working_dir: /app
-    environment:
-      ENV: prod
-    command: sh -c "npx json-server --watch db.json --port 5000"
-    volumes:
-      - ./k6-tests:/app
-    ports:
-      - "3003:5000"
+    strategy:
+      matrix:
+        environment: [local, qa, prod]
 
-  k6:
-    build: .
-    working_dir: /app
-    environment:
-      ENV: local    # Change to local, qa, prod as needed
-      DOCKER: "true"
-    ports:
-      - "5665:5665"
-    command: sh -c "npx wait-on http://mock-local:3000 && npm run k6:smoke"
+    steps:
+      # 1️⃣ Checkout code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2️⃣ Ensure reports folder exists on host
+      - name: Ensure reports directory exists
+        run: mkdir -p k6-tests/reports
+
+      # 3️⃣ Build Docker image
+      - name: Build Docker image
+        run: docker compose build
+
+      # 4️⃣ Start mock service for current environment
+      - name: Start mock API service
+        run: |
+          ENV_NAME=${{ matrix.environment }}
+          MOCK_SERVICE="mock-${ENV_NAME}"
+          echo "Starting $MOCK_SERVICE"
+          docker compose up -d $MOCK_SERVICE
+
+      # 5️⃣ Wait for mock service to be ready
+      - name: Wait for mock service
+        run: |
+          ENV_NAME=${{ matrix.environment }}
+          MOCK_SERVICE="mock-${ENV_NAME}"
+
+          if [ "$ENV_NAME" = "local" ]; then
+            MOCK_PORT=3000
+          elif [ "$ENV_NAME" = "qa" ]; then
+            MOCK_PORT=4000
+          else
+            MOCK_PORT=5000
+          fi
+
+          echo "Waiting for $MOCK_SERVICE on port $MOCK_PORT"
+          docker compose run --rm k6 \
+            sh -c "npx wait-on http://$MOCK_SERVICE:$MOCK_PORT"
+
+      # 6️⃣ Run k6 smoke test inside Compose network
+      - name: Run k6 smoke test
+        run: |
+          ENV_NAME=${{ matrix.environment }}
+          echo "Running smoke test for $ENV_NAME"
+
+          docker compose run --rm --service-ports \
+            -e ENV=$ENV_NAME \
+            -e DOCKER=true \
+            k6 \
+            sh -c "npm run k6:smoke:$ENV_NAME:docker"
+
+      # 7️⃣ Debug (optional but useful)
+      - name: List report files
+        run: ls -R k6-tests/reports || true
+
+      # 8️⃣ Upload report
+      - name: Upload k6 HTML Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-smoke-report-${{ matrix.environment }}
+          path: k6-tests/reports/smoke-report.html
+
+      # 9️⃣ Tear down containers
+      - name: Tear down services
+        if: always()
+        run: docker compose down
