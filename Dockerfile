@@ -5,8 +5,7 @@
 FROM grafana/k6:latest
 
 # --------------------------------------------------
-# Switch to root user so we can install Node.js
-# (The base k6 image does not include Node)
+# Switch to root user to install Node.js and global packages
 # --------------------------------------------------
 USER root
 
@@ -20,6 +19,11 @@ USER root
 RUN apk add --no-cache nodejs npm
 
 # --------------------------------------------------
+# Install json-server globally so mock APIs can run without prompt
+# --------------------------------------------------
+RUN npm install -g json-server
+
+# --------------------------------------------------
 # Set working directory inside container
 # All following commands run from /app
 # --------------------------------------------------
@@ -27,7 +31,7 @@ WORKDIR /app
 
 # --------------------------------------------------
 # Copy package.json + package-lock.json first
-# This improves Docker layer caching
+# Improves Docker layer caching
 # --------------------------------------------------
 COPY package*.json ./
 
@@ -51,11 +55,7 @@ COPY . .
 EXPOSE 3000 5665
 
 # --------------------------------------------------
-# IMPORTANT:
-# The official k6 image defines:
-# ENTRYPOINT ["k6"]
-# This causes Docker to run everything through k6.
-# We override it so we can run shell commands instead.
+# Override entrypoint to allow shell commands
 # --------------------------------------------------
 ENTRYPOINT []
 
@@ -64,7 +64,5 @@ ENTRYPOINT []
 # 1. Start mock API in background
 # 2. Wait until localhost:3000 is ready
 # 3. Run k6 smoke test
-#
-# Using JSON array format (recommended by Docker)
 # --------------------------------------------------
 CMD ["sh", "-c", "npm run mock:api & npx wait-on http://localhost:3000 && npm run k6:smoke"]

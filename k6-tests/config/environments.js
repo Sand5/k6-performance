@@ -1,14 +1,17 @@
+// k6-tests/config/environments.js
+
 const CURRENT_ENV = __ENV.ENV || "local";
+const IS_DOCKER = __ENV.DOCKER === "true";
 
 const environments = {
   local: {
-    baseUrl: "http://localhost:3000",
+    baseUrl: IS_DOCKER ? "http://mock-local:3000" : "http://localhost:3000",
   },
   qa: {
-    baseUrl: "http://localhost:4000",
+    baseUrl: IS_DOCKER ? "http://mock-qa:4000" : "http://localhost:4000",
   },
   prod: {
-    baseUrl: "http://localhost:5000",
+    baseUrl: IS_DOCKER ? "http://mock-prod:5000" : "http://localhost:5000",
   },
 };
 

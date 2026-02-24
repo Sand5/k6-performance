@@ -1,11 +1,5 @@
-# --------------------------------------------
-# Workflow Name
-# --------------------------------------------
 name: K6 Performance Tests (Docker)
 
-# --------------------------------------------
-# Workflow Triggers
-# --------------------------------------------
 on:
   workflow_dispatch:
   push:
@@ -13,61 +7,48 @@ on:
   pull_request:
     branches: [ main ]
 
-# --------------------------------------------
-# Jobs Section
-# --------------------------------------------
 jobs:
   smoke-tests:
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        environment: [local, qa]
+        environment: [local, qa, prod]
 
     steps:
-      # Step 1: Checkout code
+      # 1️⃣ Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Step 2: Build k6 Docker image
+      # 2️⃣ Build Docker image
       - name: Build Docker image
         run: docker build -t k6-tests .
 
-      # Step 3: Start Mock API service
+      # 3️⃣ Start the appropriate mock API service
       - name: Start mock API service
         run: |
           ENV_NAME=${{ matrix.environment }}
-          MOCK_SERVICE="mock-${ENV_NAME}"
+          MOCK_SERVICE="mock-$ENV_NAME"
           echo "Starting mock API service: $MOCK_SERVICE"
           docker compose up -d $MOCK_SERVICE
-          echo "Mock service $MOCK_SERVICE started."
+          echo "Mock service $MOCK_SERVICE is starting..."
 
-      # Step 4: Run k6 Smoke Test
+      # 4️⃣ Run k6 smoke test inside the container
       - name: Run k6 smoke test
         run: |
           ENV_NAME=${{ matrix.environment }}
-          MOCK_SERVICE="mock-${ENV_NAME}"
-
-          # internal port in the container
-          if [ "$ENV_NAME" = "local" ]; then
-            MOCK_PORT=3000
-          else
-            MOCK_PORT=4000
-          fi
-
-          echo "Running k6 smoke test against $MOCK_SERVICE on port $MOCK_PORT"
-
+          echo "Running k6 smoke test against mock-$ENV_NAME"
           docker compose run --rm \
             -e ENV=$ENV_NAME \
-            k6 \
-            sh -c "npx wait-on http://$MOCK_SERVICE:$MOCK_PORT && npm run k6:smoke"
+            -e DOCKER=true \
+            k6 npm run k6:smoke:local:docker
 
-      # Step 5: Tear down Mock Service
-      - name: Tear down mock service
+      # 5️⃣ Tear down mock services
+      - name: Tear down mock services
         run: docker compose down
 
-      # Step 6: Upload k6 HTML report
-      - name: Upload k6 smoke report
+      # 6️⃣ Upload k6 HTML report
+      - name: Upload k6 HTML Report
         if: always()
         uses: actions/upload-artifact@v4
         with:

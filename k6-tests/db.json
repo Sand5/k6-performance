@@ -30,7 +30,11 @@
       "id": "1",
       "title": "Post 1",
       "author": "alice"
+    },
+    {
+      "id": "3436",
+      "title": "k6 post",
+      "author": "k6 user"
     }
-
   ]
 }
