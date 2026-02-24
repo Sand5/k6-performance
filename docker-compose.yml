@@ -16,61 +16,62 @@ jobs:
         environment: [local, qa, prod]
 
     steps:
-      # 1️⃣ Checkout code
+      # 1️⃣ Checkout
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2️⃣ Ensure reports folder exists on host
+      # 2️⃣ Ensure reports directory exists
       - name: Ensure reports directory exists
         run: mkdir -p k6-tests/reports
 
-      # 3️⃣ Build Docker image
-      - name: Build Docker image
+      # 3️⃣ Build Docker images
+      - name: Build Docker images
         run: docker compose build
 
-      # 4️⃣ Start mock service for current environment
+      # 4️⃣ Start mock service
       - name: Start mock API service
         run: |
           ENV_NAME=${{ matrix.environment }}
-          MOCK_SERVICE="mock-${ENV_NAME}"
-          echo "Starting $MOCK_SERVICE"
-          docker compose up -d $MOCK_SERVICE
+          MOCK_SERVICE="mock-$${ENV_NAME}"
+          echo "Starting $${MOCK_SERVICE}"
+          docker compose up -d $${MOCK_SERVICE}
 
-      # 5️⃣ Wait for mock service to be ready
+      # 5️⃣ Wait for mock to be ready
       - name: Wait for mock service
         run: |
           ENV_NAME=${{ matrix.environment }}
-          MOCK_SERVICE="mock-${ENV_NAME}"
+          MOCK_SERVICE="mock-$${ENV_NAME}"
 
-          if [ "$ENV_NAME" = "local" ]; then
+          if [ "$${ENV_NAME}" = "local" ]; then
             MOCK_PORT=3000
-          elif [ "$ENV_NAME" = "qa" ]; then
+          elif [ "$${ENV_NAME}" = "qa" ]; then
             MOCK_PORT=4000
           else
             MOCK_PORT=5000
           fi
 
-          echo "Waiting for $MOCK_SERVICE on port $MOCK_PORT"
+          echo "Waiting for $${MOCK_SERVICE} on port $${MOCK_PORT}"
           docker compose run --rm k6 \
-            sh -c "npx wait-on http://$MOCK_SERVICE:$MOCK_PORT"
+            sh -c "npx wait-on http://$${MOCK_SERVICE}:$${MOCK_PORT}"
 
-      # 6️⃣ Run k6 smoke test inside Compose network
+      # 6️⃣ Run k6 smoke test
       - name: Run k6 smoke test
         run: |
           ENV_NAME=${{ matrix.environment }}
-          echo "Running smoke test for $ENV_NAME"
+          echo "Running smoke test for $${ENV_NAME}"
 
           docker compose run --rm --service-ports \
-            -e ENV=$ENV_NAME \
+            -e ENV=$${ENV_NAME} \
             -e DOCKER=true \
             k6 \
-            sh -c "npm run k6:smoke:$ENV_NAME:docker"
+            sh -c "npm run k6:smoke:$${ENV_NAME}:docker"
 
       # 7️⃣ Debug (optional but useful)
       - name: List report files
+        if: always()
         run: ls -R k6-tests/reports || true
 
-      # 8️⃣ Upload report
+      # 8️⃣ Upload HTML report
       - name: Upload k6 HTML Report
         if: always()
         uses: actions/upload-artifact@v4
