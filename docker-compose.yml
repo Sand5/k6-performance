@@ -1,0 +1,40 @@
+version: '3.9'
+
+services:
+  mock-local:
+    image: node:18-alpine
+    working_dir: /app
+    volumes:
+      - ./k6-tests:/app
+    command: sh -c "npx json-server --watch db.json --port 3000"
+    ports:
+      - "3000:3000"
+
+  mock-qa:
+    image: node:18-alpine
+    working_dir: /app
+    volumes:
+      - ./k6-tests:/app
+    command: sh -c "npx json-server --watch db.json --port 4000"
+    ports:
+      - "4000:4000"
+
+  mock-prod:
+    image: node:18-alpine
+    working_dir: /app
+    volumes:
+      - ./k6-tests:/app
+    command: sh -c "npx json-server --watch db.json --port 5000"
+    ports:
+      - "5000:5000"
+
+  k6:
+    build: .
+    working_dir: /app
+    environment:
+      ENV: local   # Change to qa/prod as needed
+    depends_on:
+      - mock-local
+    ports:
+      - "5665:5665"
+    command: sh -c "npx wait-on http://mock-local:3000 && npm run k6:smoke"
