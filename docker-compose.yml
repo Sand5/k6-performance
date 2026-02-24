@@ -16,59 +16,38 @@ jobs:
         environment: [local, qa, prod]
 
     steps:
-      # Checkout repo
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      # Ensure reports directory exists
       - name: Ensure reports directory exists
         run: mkdir -p k6-tests/reports
 
-      # Build Docker images
       - name: Build Docker images
         run: docker compose build
 
-      # Start mock service
-      - name: Start mock API service
-        run: |
-          echo "Starting mock-${{ matrix.environment }}"
-          docker compose up -d mock-${{ matrix.environment }}
+      - name: Start mock service
+        run: docker compose up -d mock-${{ matrix.environment }}
 
-      # Wait for mock to be ready
       - name: Wait for mock service
         run: |
-          ENV="${{ matrix.environment }}"
-
-          if [ "$ENV" = "local" ]; then
+          if [ "${{ matrix.environment }}" = "local" ]; then
             PORT=3000
-          elif [ "$ENV" = "qa" ]; then
+          elif [ "${{ matrix.environment }}" = "qa" ]; then
             PORT=4000
           else
             PORT=5000
           fi
 
-          echo "Waiting for mock-$ENV on port $PORT"
-
           docker compose run --rm k6 \
-            sh -c "npx wait-on http://mock-$ENV:$PORT"
+            sh -c "npx wait-on http://mock-${{ matrix.environment }}:$PORT"
 
-      # Run k6 smoke test
       - name: Run k6 smoke test
         run: |
-          echo "Running smoke test for ${{ matrix.environment }}"
-
           docker compose run --rm --service-ports \
             -e ENV=${{ matrix.environment }} \
             -e DOCKER=true \
             k6 \
             sh -c "npm run k6:smoke:${{ matrix.environment }}:docker"
 
-      # Debug (optional)
-      - name: List report files
-        if: always()
-        run: ls -R k6-tests/reports || true
-
-      # Upload HTML report
       - name: Upload k6 HTML Report
         if: always()
         uses: actions/upload-artifact@v4
@@ -76,7 +55,6 @@ jobs:
           name: k6-smoke-report-${{ matrix.environment }}
           path: k6-tests/reports/smoke-report.html
 
-      # Tear down
       - name: Tear down services
         if: always()
         run: docker compose down
