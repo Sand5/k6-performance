@@ -8,10 +8,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  smoke-tests:
+  smoke-local:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
-
+    timeout-minutes: 15
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -22,14 +21,28 @@ jobs:
           docker compose run --rm -e ENV=local k6
           docker compose down --volumes --remove-orphans
 
+      - name: Upload Local reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-reports-local
+          path: k6-tests/reports/
+
+  smoke-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: smoke-local
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Build & run QA environment
         run: |
           docker compose up --build -d mock-qa
           docker compose run --rm -e ENV=qa k6
           docker compose down --volumes --remove-orphans
 
-      - name: Upload reports
-        uses: actions/upload-artifact@v3
+      - name: Upload QA reports
+        uses: actions/upload-artifact@v4
         with:
-          name: k6-reports
+          name: k6-reports-qa
           path: k6-tests/reports/
