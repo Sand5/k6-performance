@@ -19,7 +19,7 @@ jobs:
         run: |
           docker compose up --build -d mock-local
           sleep 3
-          npx wait-on http://localhost:3000 --timeout 60000 --interval 500
+          npx wait-on http://localhost:3000 --timeout 120000 --interval 2000
           docker compose run --rm -e ENV=local k6
           docker compose down --volumes --remove-orphans
 
@@ -31,7 +31,7 @@ jobs:
 
   smoke-qa:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -39,8 +39,9 @@ jobs:
       - name: Build & run QA environment
         run: |
           docker compose up --build -d mock-qa
-          sleep 3
-          npx wait-on http://localhost:4000 --timeout 60000 --interval 500
+          sleep 5
+          # Retry loop to wait until the mock server responds
+          npx wait-on http://localhost:4000 --timeout 180000 --interval 2000
           docker compose run --rm -e ENV=qa k6
           docker compose down --volumes --remove-orphans
 

@@ -7,6 +7,10 @@ import { errorRate, requestsCount } from '../utils/metrics.js';
 export function crudScenario() {
   console.log(`Running crudScenario against ${CURRENT_ENV} → ${BASE_URL}`);
 
+  // ----- INITIAL WAIT FOR SERVER -----
+  console.log(`[${CURRENT_ENV}] Waiting 1s for server warm-up...`);
+  sleep(1);
+
   // ----- GET -----
   const getRes = http.get(`${BASE_URL}/posts`, { tags: { endpoint: 'get_posts' } });
   requestsCount.add(1);
