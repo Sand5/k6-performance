@@ -1,12 +1,24 @@
 version: "3.9"
 
 services:
+  # ------------------------
+  # Mock API service
+  # ------------------------
+  mock-local:
+    build: .
+    container_name: mock-local
+    ports:
+      - "3000:3000"
+
+  # ------------------------
+  # k6 load test service
+  # ------------------------
   k6:
     build: .
     container_name: k6-tests
-    ports:
-      - "3000:3000"
-      - "5665:5665"
+    depends_on:
+      - mock-local
     environment:
       ENV: local
       DOCKER: "true"
+    command: npm run k6:smoke

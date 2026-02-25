@@ -16,10 +16,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build and run k6 container with mock API
+      - name: Build & Run services
         run: |
           docker compose up --build --abort-on-container-exit
-          
-      - name: Tear down Docker Compose
+
+      - name: Tear down
         if: always()
         run: docker compose down --volumes --remove-orphans
