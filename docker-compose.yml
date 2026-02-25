@@ -12,9 +12,9 @@ services:
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/posts || exit 1"]
       interval: 5s
-      timeout: 3s
+      timeout: 5s         # increased from 3s for more tolerance
       retries: 5
-      start_period: 5s
+      start_period: 10s   # increased from 5s
 
   # QA mock API
   mock-qa:
@@ -27,9 +27,9 @@ services:
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4000/posts || exit 1"]
       interval: 5s
-      timeout: 3s
+      timeout: 5s         # increased for QA stability
       retries: 5
-      start_period: 5s
+      start_period: 10s   # give QA API more startup time
 
   # K6 test runner
   k6:
@@ -38,5 +38,10 @@ services:
     environment:
       - DOCKER=true
       - K6_DASHBOARD_PORT=5665
+    depends_on:
+      mock-local:
+        condition: service_healthy
+      mock-qa:
+        condition: service_healthy
     volumes:
       - ./k6-tests:/app/k6-tests

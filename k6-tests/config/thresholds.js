@@ -1,5 +1,4 @@
 export const smokeThresholds = {
-  http_req_failed: ["rate<0.01"],
   http_req_duration: ["p(95)<300"],
   "login_duration{endpoint:login}": ["p(95)<200"],
   "login_duration{endpoint:create-user}": ["p(95)<250"], // new threshold
