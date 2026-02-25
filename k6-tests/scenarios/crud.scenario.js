@@ -5,21 +5,25 @@ import { standardChecks } from '../utils/checks.js';
 import { errorRate, requestsCount } from '../utils/metrics.js';
 
 export function crudScenario() {
-  // Log which environment we're running against
   console.log(`Running crudScenario against ${CURRENT_ENV} → ${BASE_URL}`);
 
   // ----- GET -----
   const getRes = http.get(`${BASE_URL}/posts`, { tags: { endpoint: 'get_posts' } });
   requestsCount.add(1);
+  const getFailed = !standardChecks(getRes);
+  if (getFailed) errorRate.add(1);
   console.log(`[${CURRENT_ENV}] GET /posts status: ${getRes.status}`);
-  if (!standardChecks(getRes)) errorRate.add(1);
+
+  // Stop iteration early if GET fails
+  if (getFailed) return;
 
   sleep(1);
 
   // ----- POST -----
-  const postTitle = __ENV.TEST_POST_TITLE || 'k6 post';
-  const postAuthor = __ENV.TEST_POST_AUTHOR || 'k6 user';
-  const postPayload = JSON.stringify({ title: postTitle, author: postAuthor });
+  const postPayload = JSON.stringify({
+    title: __ENV.TEST_POST_TITLE || 'k6 post',
+    author: __ENV.TEST_POST_AUTHOR || 'k6 user',
+  });
 
   const postRes = http.post(
     `${BASE_URL}/posts`,
@@ -27,8 +31,12 @@ export function crudScenario() {
     { headers: { 'Content-Type': 'application/json' }, tags: { endpoint: 'create_post' } }
   );
   requestsCount.add(1);
+  const postFailed = !standardChecks(postRes);
+  if (postFailed) errorRate.add(1);
   console.log(`[${CURRENT_ENV}] POST /posts status: ${postRes.status}`);
-  if (!standardChecks(postRes)) errorRate.add(1);
+
+  // Stop iteration early if POST fails
+  if (postFailed) return;
 
   const postId = postRes.json('id');
   console.log(`[${CURRENT_ENV}] Created post id: ${postId}`);
@@ -43,8 +51,8 @@ export function crudScenario() {
       { tags: { endpoint: 'delete_post' } }
     );
     requestsCount.add(1);
-    console.log(`[${CURRENT_ENV}] DELETE /posts/${postId} status: ${delRes.status}`);
     if (!standardChecks(delRes)) errorRate.add(1);
+    console.log(`[${CURRENT_ENV}] DELETE /posts/${postId} status: ${delRes.status}`);
   }
 
   sleep(1);

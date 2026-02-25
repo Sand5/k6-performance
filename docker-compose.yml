@@ -9,6 +9,12 @@ services:
       - "3000:3000"
     environment:
       - PORT=3000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
 
   # QA mock API
   mock-qa:
@@ -18,6 +24,12 @@ services:
       - "4000:4000"
     environment:
       - PORT=4000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
 
   # K6 test runner
   k6:
@@ -28,4 +40,3 @@ services:
       - K6_DASHBOARD_PORT=5665
     volumes:
       - ./k6-tests:/app/k6-tests
-    # Remove depends_on so we control start order in GitHub Actions
