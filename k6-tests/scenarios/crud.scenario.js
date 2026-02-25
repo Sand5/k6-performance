@@ -17,7 +17,7 @@ export function crudScenario() {
   // Stop iteration early if GET fails
   if (getFailed) return;
 
-  sleep(1);
+  sleep(1.5);
 
   // ----- POST -----
   const postPayload = JSON.stringify({
@@ -41,7 +41,7 @@ export function crudScenario() {
   const postId = postRes.json('id');
   console.log(`[${CURRENT_ENV}] Created post id: ${postId}`);
 
-  sleep(1);
+  sleep(1.5);
 
   // ----- DELETE -----
   if (postId) {
@@ -55,5 +55,5 @@ export function crudScenario() {
     console.log(`[${CURRENT_ENV}] DELETE /posts/${postId} status: ${delRes.status}`);
   }
 
-  sleep(1);
+  sleep(1.5);
 }
