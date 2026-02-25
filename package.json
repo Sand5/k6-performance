@@ -35,7 +35,6 @@
   "devDependencies": {
     "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
-    "json-server": "^1.0.0-beta.5",
-    "wait-on": "^9.0.4"
+    "json-server": "^1.0.0-beta.5"
   }
 }
