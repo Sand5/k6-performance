@@ -30,19 +30,18 @@ jobs:
       - name: Start mock API service
         run: |
           echo "Starting mock API service: $MOCK_SERVICE on port $MOCK_PORT"
-          # Use a unique project name per job to isolate Compose networks
-          docker compose -p $ENV_NAME up -d "$MOCK_SERVICE"
+          docker compose -p "$ENV_NAME" up -d "$MOCK_SERVICE"
 
       - name: Wait for mock service
         run: npx --yes wait-on "http://localhost:$MOCK_PORT"
 
       - name: Run k6 smoke test
         run: |
-          docker compose -p $ENV_NAME run --rm \
+          docker compose -p "$ENV_NAME" run --rm \
             -e ENV="$ENV_NAME" \
             -e DOCKER=true \
             k6 npm run k6:smoke
 
       - name: Tear down services
         if: always()
-        run: docker compose -p $ENV_NAME down --volumes --remove-orphans
+        run: docker compose -p "$ENV_NAME" down --volumes --remove-orphans
