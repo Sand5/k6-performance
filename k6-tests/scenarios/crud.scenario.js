@@ -45,7 +45,7 @@ export function crudScenario() {
   const postId = postRes.json('id');
   console.log(`[${CURRENT_ENV}] Created post id: ${postId}`);
 
-  sleep(1.5);
+  sleep(3);
 
   // ----- DELETE -----
   if (postId) {
