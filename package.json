@@ -5,6 +5,16 @@
   "main": "index.js",
 "scripts": {
 
+  "mock:api": "json-server --watch k6-tests/db.json --port 3000",
+  "mock:api:quiet": "json-server --watch k6-tests/db.json --port 3000 > /dev/null 2>&1",
+  "mock:api:local": "json-server --watch k6-tests/db.json --port 3000",
+  "mock:api:qa": "json-server --watch k6-tests/db.json --port 4000",
+  "mock:api:prod": "json-server --watch k6-tests/db.json --port 5000",
+  
+  "mock:api:quiet:local": "json-server --watch k6-tests/db.json --port 3000 > /dev/null 2>&1",
+  "mock:api:quiet:qa": "json-server --watch k6-tests/db.json --port 4000 > /dev/null 2>&1",
+  "mock:api:quiet:prod": "json-server --watch k6-tests/db.json --port 5000 > /dev/null 2>&1",
+  
   "k6:smoke": "node createReportsDir.js && K6_WEB_DASHBOARD=true K6_WEB_DASHBOARD_PORT=${K6_DASHBOARD_PORT:-5665} K6_WEB_DASHBOARD_EXPORT=k6-tests/reports/smoke-report.html k6 run k6-tests/tests/smoke.test.js",
   "k6:load": "node createReportsDir.js && K6_WEB_DASHBOARD=true K6_WEB_DASHBOARD_PORT=${K6_DASHBOARD_PORT:-5666} K6_WEB_DASHBOARD_EXPORT=k6-tests/reports/load-report.html k6 run k6-tests/tests/load.test.js",
   "k6:spike": "node createReportsDir.js && K6_WEB_DASHBOARD=true K6_WEB_DASHBOARD_PORT=${K6_DASHBOARD_PORT:-5667} K6_WEB_DASHBOARD_EXPORT=k6-tests/reports/spike-report.html k6 run k6-tests/tests/spike.test.js",
