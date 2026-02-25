@@ -1,13 +1,16 @@
 name: K6 Smoke Test (Local Only)
 
 on:
-  workflow_dispatch:
   push:
     branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   smoke-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout
@@ -21,7 +24,7 @@ jobs:
           echo "Starting mock-local service..."
           docker compose up -d mock-local
 
-      - name: Wait for service
+      - name: Wait for mock service
         run: |
           echo "Waiting for mock service..."
           sleep 5
