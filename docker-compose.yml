@@ -23,11 +23,9 @@ services:
   k6:
     build: .
     container_name: k6-tests
-    depends_on:
-      - mock-local
-      - mock-qa
     environment:
       - DOCKER=true
       - K6_DASHBOARD_PORT=5665
     volumes:
       - ./k6-tests:/app/k6-tests
+    # Remove depends_on so we control start order in GitHub Actions
