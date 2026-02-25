@@ -8,8 +8,8 @@ on:
     branches: [ main ]
 
 concurrency:
-  group: k6-${{ github.ref }}
-  cancel-in-progress: false
+  group: "k6-${{ github.workflow }}-${{ github.ref_name }}"
+  cancel-in-progress: true
 
 jobs:
   smoke-tests:
@@ -51,7 +51,7 @@ jobs:
           MOCK_PORT: ${{ matrix.mock_port }}
         run: |
           echo "Waiting for service..."
-          npx wait-on http://$MOCK_SERVICE:$MOCK_PORT
+          npx --yes wait-on http://$MOCK_SERVICE:$MOCK_PORT
 
       - name: Run k6 smoke test
         env:
