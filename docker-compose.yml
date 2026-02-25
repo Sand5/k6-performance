@@ -7,6 +7,10 @@ on:
   pull_request:
     branches: [ main ]
 
+  concurrency:
+  group: k6-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   smoke-tests:
     runs-on: ubuntu-latest
