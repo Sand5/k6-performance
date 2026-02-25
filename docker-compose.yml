@@ -7,7 +7,7 @@ on:
   pull_request:
     branches: [ main ]
 
-# Optional: concurrency can cancel only older runs of the same branch+env
+# Optional: cancel only older runs per environment
 concurrency:
   group: k6-tests-${{ github.ref_name }}-${{ matrix.environment }}
   cancel-in-progress: true
@@ -37,23 +37,28 @@ jobs:
       - name: Build Docker image
         run: docker build -t k6-tests .
 
+      # 1️⃣ Set variables safely in GitHub environment
       - name: Set environment variables
         run: |
           echo "ENV_NAME=${{ matrix.environment }}" >> $GITHUB_ENV
           echo "MOCK_SERVICE=${{ matrix.mock_service }}" >> $GITHUB_ENV
           echo "MOCK_PORT=${{ matrix.mock_port }}" >> $GITHUB_ENV
 
+      # 2️⃣ Use shell variables only, avoid ${} interpolation errors
       - name: Start mock API service
         run: |
           echo "Starting mock API service: $MOCK_SERVICE on port $MOCK_PORT"
-          # Use -p to isolate Compose projects per environment
+          # Isolate Compose network per environment
           docker compose -p "$ENV_NAME" up -d "$MOCK_SERVICE"
 
       - name: Wait for mock service
-        run: npx --yes wait-on "http://localhost:$MOCK_PORT"
+        run: |
+          echo "Waiting for mock service $MOCK_SERVICE at port $MOCK_PORT..."
+          npx --yes wait-on "http://localhost:$MOCK_PORT"
 
       - name: Run k6 smoke test
         run: |
+          echo "Running k6 smoke test against $ENV_NAME..."
           docker compose -p "$ENV_NAME" run --rm \
             -e ENV="$ENV_NAME" \
             -e DOCKER=true \
