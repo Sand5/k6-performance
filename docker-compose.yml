@@ -8,7 +8,7 @@ on:
     branches: [ main ]
 
 concurrency:
-  group: "k6-${{ github.workflow }}-${{ github.ref_name }}"
+  group: k6-tests
   cancel-in-progress: true
 
 jobs:
@@ -38,28 +38,23 @@ jobs:
 
       - name: Start mock API service
         env:
-          ENV_NAME: ${{ matrix.environment }}
           MOCK_SERVICE: ${{ matrix.mock_service }}
           MOCK_PORT: ${{ matrix.mock_port }}
         run: |
           echo "Starting $MOCK_SERVICE on port $MOCK_PORT"
           docker compose up -d $MOCK_SERVICE
 
-      - name: Wait for mock service to be ready
+      - name: Wait for mock service
         env:
           MOCK_SERVICE: ${{ matrix.mock_service }}
           MOCK_PORT: ${{ matrix.mock_port }}
         run: |
-          echo "Waiting for service..."
           npx --yes wait-on http://$MOCK_SERVICE:$MOCK_PORT
 
       - name: Run k6 smoke test
         env:
           ENV_NAME: ${{ matrix.environment }}
-          MOCK_SERVICE: ${{ matrix.mock_service }}
-          MOCK_PORT: ${{ matrix.mock_port }}
         run: |
-          echo "Running smoke test against $ENV_NAME"
           docker compose run --rm \
             -e ENV=$ENV_NAME \
             -e DOCKER=true \
