@@ -12,7 +12,7 @@ USER root
 RUN apk add --no-cache nodejs npm
 
 # Install json-server globally
-RUN npm install -g json-server
+RUN npm install -g json-server wait-on
 
 # Set working directory
 WORKDIR /app
