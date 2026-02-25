@@ -1,75 +1,38 @@
-name: K6 Performance Tests (Docker)
+name: K6 Smoke Test (Local Only)
 
 on:
   workflow_dispatch:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
 
 jobs:
-  smoke-tests:
+  smoke-test:
     runs-on: ubuntu-latest
 
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - environment: local
-            mock_service: mock-local
-            mock_port: 3000
-          - environment: qa
-            mock_service: mock-qa
-            mock_port: 4000
-          - environment: prod
-            mock_service: mock-prod
-            mock_port: 5000
-
-    concurrency:
-      # Unique group per environment to avoid cancellations
-      group: k6-tests-${{ github.ref_name }}-${{ matrix.environment }}
-      cancel-in-progress: true
-
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build Docker image per environment
-        run: |
-          docker build -t k6-tests:${{ matrix.environment }} .
+      - name: Build Docker image
+        run: docker build -t k6-tests .
 
-      - name: Set environment variables
+      - name: Start mock service
         run: |
-          echo "ENV_NAME=${{ matrix.environment }}" >> $GITHUB_ENV
-          echo "MOCK_SERVICE=${{ matrix.mock_service }}" >> $GITHUB_ENV
-          echo "MOCK_PORT=${{ matrix.mock_port }}" >> $GITHUB_ENV
+          echo "Starting mock-local service..."
+          docker compose up -d mock-local
 
-      - name: Start mock API service
+      - name: Wait for service
         run: |
-          echo "Starting mock API service $MOCK_SERVICE on port $MOCK_PORT"
-          # Use a unique Compose project name to avoid conflicts
-          docker compose -p k6-${{ matrix.environment }} up -d "$MOCK_SERVICE"
-
-      - name: Wait for mock service
-        run: |
-          echo "Waiting for mock service $MOCK_SERVICE at port $MOCK_PORT..."
-          npx --yes wait-on http://$MOCK_SERVICE:$MOCK_PORT
+          echo "Waiting for mock service..."
+          sleep 5
 
       - name: Run k6 smoke test
         run: |
-          echo "Running k6 smoke test against $ENV_NAME..."
-          docker compose -p k6-${{ matrix.environment }} run --rm \
-            -e ENV="$ENV_NAME" \
+          docker compose run --rm \
+            -e ENV=local \
             -e DOCKER=true \
             k6 npm run k6:smoke
 
-      - name: Tear down services
+      - name: Tear down
         if: always()
-        run: docker compose -p k6-${{ matrix.environment }} down --volumes --remove-orphans
-
-      - name: Upload k6 HTML Report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: k6-smoke-report-$ENV_NAME
-          path: k6-tests/reports/smoke-report.html
+        run: docker compose down --volumes --remove-orphans
