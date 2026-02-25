@@ -16,20 +16,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build Docker Compose services
-        run: docker compose build
-
-      - name: Start mock service
-        run: docker compose up -d mock-local
-
-      - name: Wait for mock service
+      - name: Build and run k6 container with mock API
         run: |
-          echo "Waiting for mock-local to be ready..."
-          sleep 5
-
-      - name: Run k6 smoke tests
-        run: docker compose run --rm k6 npm run k6:smoke
-
+          docker compose up --build --abort-on-container-exit
+          
       - name: Tear down Docker Compose
         if: always()
         run: docker compose down --volumes --remove-orphans

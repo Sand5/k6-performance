@@ -1,17 +1,12 @@
+version: "3.9"
+
 services:
-  mock-local:
-    image: json-server
-    container_name: mock-local
-    command: json-server --watch db.json --port 3000
+  k6:
+    build: .
+    container_name: k6-tests
     ports:
       - "3000:3000"
-
-  k6:
-    build: .          # <-- points to project root where Dockerfile exists
-    container_name: k6-tests
-    depends_on:
-      - mock-local
+      - "5665:5665"
     environment:
-      - ENV=local
-      - DOCKER=true
-    command: npm run k6:smoke
+      ENV: local
+      DOCKER: "true"
