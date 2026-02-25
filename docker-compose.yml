@@ -7,9 +7,9 @@ on:
   pull_request:
     branches: [ main ]
 
-# Optional: cancel only older runs per environment
+# Fixed concurrency: no matrix variables here
 concurrency:
-  group: k6-tests-${{ github.ref_name }}-${{ matrix.environment }}
+  group: k6-tests-${{ github.ref_name }}
   cancel-in-progress: true
 
 jobs:
@@ -37,25 +37,24 @@ jobs:
       - name: Build Docker image
         run: docker build -t k6-tests .
 
-      # 1️⃣ Set variables safely in GitHub environment
+      # Set environment variables safely
       - name: Set environment variables
         run: |
           echo "ENV_NAME=${{ matrix.environment }}" >> $GITHUB_ENV
           echo "MOCK_SERVICE=${{ matrix.mock_service }}" >> $GITHUB_ENV
           echo "MOCK_PORT=${{ matrix.mock_port }}" >> $GITHUB_ENV
 
-      # 2️⃣ Use shell variables only, avoid ${} interpolation errors
+      # Start mock service using only shell variables
       - name: Start mock API service
         run: |
           echo "Starting mock API service: $MOCK_SERVICE on port $MOCK_PORT"
-          # Isolate Compose network per environment
           docker compose -p "$ENV_NAME" up -d "$MOCK_SERVICE"
 
+      # Wait for the service
       - name: Wait for mock service
-        run: |
-          echo "Waiting for mock service $MOCK_SERVICE at port $MOCK_PORT..."
-          npx --yes wait-on "http://localhost:$MOCK_PORT"
+        run: npx --yes wait-on "http://localhost:$MOCK_PORT"
 
+      # Run k6 smoke test
       - name: Run k6 smoke test
         run: |
           echo "Running k6 smoke test against $ENV_NAME..."
@@ -64,10 +63,12 @@ jobs:
             -e DOCKER=true \
             k6 npm run k6:smoke
 
+      # Tear down services
       - name: Tear down services
         if: always()
         run: docker compose -p "$ENV_NAME" down --volumes --remove-orphans
 
+      # Upload k6 report
       - name: Upload k6 HTML Report
         if: always()
         uses: actions/upload-artifact@v4
