@@ -1,7 +1,9 @@
 version: "3.9"
 
 services:
+  # ----------------------------
   # Local mock API
+  # ----------------------------
   mock-local:
     build: .
     container_name: mock-local
@@ -12,11 +14,13 @@ services:
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/posts || exit 1"]
       interval: 5s
-      timeout: 5s         # increased from 3s for more tolerance
+      timeout: 3s
       retries: 5
-      start_period: 10s   # increased from 5s
+      start_period: 5s
 
+  # ----------------------------
   # QA mock API
+  # ----------------------------
   mock-qa:
     build: .
     container_name: mock-qa
@@ -27,21 +31,24 @@ services:
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4000/posts || exit 1"]
       interval: 5s
-      timeout: 5s         # increased for QA stability
+      timeout: 3s
       retries: 5
-      start_period: 10s   # give QA API more startup time
+      start_period: 5s
 
+  # ----------------------------
   # K6 test runner
+  # ----------------------------
   k6:
     build: .
     container_name: k6-tests
     environment:
       - DOCKER=true
-      - K6_DASHBOARD_PORT=5665
+      # Point K6 to the mock container
+      - BASE_URL=http://mock-local:3000
+      - CURRENT_ENV=local
     depends_on:
       mock-local:
         condition: service_healthy
-      mock-qa:
-        condition: service_healthy
     volumes:
       - ./k6-tests:/app/k6-tests
+    command: sh -c "npm run k6:smoke"
