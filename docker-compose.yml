@@ -1,4 +1,4 @@
-name: K6 Smoke Test (Local Only)
+name: K6 Smoke Test (Local Only!)
 
 on:
   push:
