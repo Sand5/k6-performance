@@ -1,0 +1,35 @@
+name: K6 Smoke Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Build services
+        run: docker compose build
+
+      - name: Start mock service
+        run: docker compose up -d mock-local
+
+      - name: Wait for mock service
+        run: |
+          echo "Waiting for mock-local..."
+          sleep 5
+
+      - name: Run k6 tests
+        run: docker compose run --rm k6
+
+      - name: Shutdown services
+        if: always()
+        run: docker compose down --volumes --remove-orphans
