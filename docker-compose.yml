@@ -36,11 +36,7 @@ jobs:
       - name: Build Docker image
         run: docker build -t k6-tests .
 
-      # -----------------------------
-      # Shared setup script block
-      # -----------------------------
       - name: Set environment variables
-        id: env
         run: |
           echo "ENV_NAME=${{ matrix.environment }}" >> $GITHUB_ENV
           echo "MOCK_SERVICE=${{ matrix.mock_service }}" >> $GITHUB_ENV
@@ -48,13 +44,16 @@ jobs:
 
       - name: Start mock API service
         run: |
+          # Use exported GitHub environment variables
           echo "Starting mock API service: $MOCK_SERVICE on port $MOCK_PORT"
           docker compose up -d "$MOCK_SERVICE"
+        shell: bash
 
       - name: Wait for mock service
         run: |
           echo "Waiting for mock service $MOCK_SERVICE at port $MOCK_PORT..."
-          npx --yes wait-on http://$MOCK_SERVICE:$MOCK_PORT
+          npx --yes wait-on "http://localhost:$MOCK_PORT"
+        shell: bash
 
       - name: Run k6 smoke test
         run: |
@@ -63,10 +62,12 @@ jobs:
             -e ENV="$ENV_NAME" \
             -e DOCKER=true \
             k6 npm run k6:smoke
+        shell: bash
 
       - name: Tear down services
         if: always()
         run: docker compose down --volumes --remove-orphans
+        shell: bash
 
       - name: Upload k6 HTML Report
         if: always()
