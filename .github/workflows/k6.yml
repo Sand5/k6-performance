@@ -1,4 +1,4 @@
-name: K6 Smoke Test (Local Only)
+name: K6 Smoke Test
 
 on:
   push:
@@ -8,18 +8,28 @@ on:
   workflow_dispatch:
 
 jobs:
-  smoke-test:
+  smoke-tests:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build & Run services
+      - name: Build & run Local environment
         run: |
-          docker compose up --build --abort-on-container-exit
+          docker compose up --build -d mock-local
+          docker compose run --rm -e ENV=local k6
+          docker compose down --volumes --remove-orphans
 
-      - name: Tear down
-        if: always()
-        run: docker compose down --volumes --remove-orphans
+      - name: Build & run QA environment
+        run: |
+          docker compose up --build -d mock-qa
+          docker compose run --rm -e ENV=qa k6
+          docker compose down --volumes --remove-orphans
+
+      - name: Upload reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: k6-reports
+          path: k6-tests/reports/
