@@ -1,41 +1,19 @@
-name: K6 Smoke Test (Local Only)
+version: "3.9"
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  workflow_dispatch:
+services:
+  mock-local:
+    build: .
+    container_name: mock-local
+    ports:
+      - "3000:3000"   # Change if your mock API listens on a different port
+    environment:
+      - NODE_ENV=local
 
-jobs:
-  smoke-test:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Build Docker image
-        run: docker build -t k6-tests .
-
-      - name: Start mock service
-        run: |
-          echo "Starting mock-local service..."
-          docker compose up -d mock-local
-
-      - name: Wait for mock service
-        run: |
-          echo "Waiting for mock service to be ready..."
-          sleep 5
-
-      - name: Run k6 smoke test
-        run: |
-          docker compose run --rm \
-            -e ENV=local \
-            -e DOCKER=true \
-            k6 npm run k6:smoke
-
-      - name: Tear down Docker Compose
-        if: always()
-        run: docker compose down --volumes --remove-orphans
+  k6:
+    build: ./k6-tests   # Path to your K6 Dockerfile folder
+    container_name: k6-tests
+    depends_on:
+      - mock-local
+    environment:
+      - ENV=local
+      - DOCKER=true
