@@ -36,27 +36,31 @@ jobs:
       - name: Build Docker image
         run: docker build -t k6-tests .
 
-      - name: Start mock API service
-        env:
-          MOCK_SERVICE: ${{ matrix.mock_service }}
-          MOCK_PORT: ${{ matrix.mock_port }}
+      # -----------------------------
+      # Shared setup script block
+      # -----------------------------
+      - name: Set environment variables
+        id: env
         run: |
-          echo "Starting $MOCK_SERVICE on port $MOCK_PORT"
-          docker compose up -d $MOCK_SERVICE
+          echo "ENV_NAME=${{ matrix.environment }}" >> $GITHUB_ENV
+          echo "MOCK_SERVICE=${{ matrix.mock_service }}" >> $GITHUB_ENV
+          echo "MOCK_PORT=${{ matrix.mock_port }}" >> $GITHUB_ENV
+
+      - name: Start mock API service
+        run: |
+          echo "Starting mock API service: $MOCK_SERVICE on port $MOCK_PORT"
+          docker compose up -d "$MOCK_SERVICE"
 
       - name: Wait for mock service
-        env:
-          MOCK_SERVICE: ${{ matrix.mock_service }}
-          MOCK_PORT: ${{ matrix.mock_port }}
         run: |
+          echo "Waiting for mock service $MOCK_SERVICE at port $MOCK_PORT..."
           npx --yes wait-on http://$MOCK_SERVICE:$MOCK_PORT
 
       - name: Run k6 smoke test
-        env:
-          ENV_NAME: ${{ matrix.environment }}
         run: |
+          echo "Running k6 smoke test against $ENV_NAME..."
           docker compose run --rm \
-            -e ENV=$ENV_NAME \
+            -e ENV="$ENV_NAME" \
             -e DOCKER=true \
             k6 npm run k6:smoke
 
@@ -68,5 +72,5 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: k6-smoke-report-${{ matrix.environment }}
+          name: k6-smoke-report-$ENV_NAME
           path: k6-tests/reports/smoke-report.html
