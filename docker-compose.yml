@@ -7,7 +7,7 @@ on:
   pull_request:
     branches: [ main ]
 
-  concurrency:
+concurrency:
   group: k6-${{ github.ref }}
   cancel-in-progress: false
 
