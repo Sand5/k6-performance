@@ -1,20 +1,6 @@
-name: K6 Performance Tests (Docker)
-
-on:
-  workflow_dispatch:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
-concurrency:
-  group: k6-tests
-  cancel-in-progress: true
-
 jobs:
   smoke-tests:
     runs-on: ubuntu-latest
-
     strategy:
       fail-fast: false
       matrix:
@@ -30,8 +16,7 @@ jobs:
             mock_port: 5000
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Build Docker image
         run: docker build -t k6-tests .
@@ -44,34 +29,20 @@ jobs:
 
       - name: Start mock API service
         run: |
-          # Use exported GitHub environment variables
           echo "Starting mock API service: $MOCK_SERVICE on port $MOCK_PORT"
-          docker compose up -d "$MOCK_SERVICE"
-        shell: bash
+          # Use a unique project name per job to isolate Compose networks
+          docker compose -p $ENV_NAME up -d "$MOCK_SERVICE"
 
       - name: Wait for mock service
-        run: |
-          echo "Waiting for mock service $MOCK_SERVICE at port $MOCK_PORT..."
-          npx --yes wait-on "http://localhost:$MOCK_PORT"
-        shell: bash
+        run: npx --yes wait-on "http://localhost:$MOCK_PORT"
 
       - name: Run k6 smoke test
         run: |
-          echo "Running k6 smoke test against $ENV_NAME..."
-          docker compose run --rm \
+          docker compose -p $ENV_NAME run --rm \
             -e ENV="$ENV_NAME" \
             -e DOCKER=true \
             k6 npm run k6:smoke
-        shell: bash
 
       - name: Tear down services
         if: always()
-        run: docker compose down --volumes --remove-orphans
-        shell: bash
-
-      - name: Upload k6 HTML Report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: k6-smoke-report-$ENV_NAME
-          path: k6-tests/reports/smoke-report.html
+        run: docker compose -p $ENV_NAME down --volumes --remove-orphans
