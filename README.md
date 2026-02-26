@@ -1,5 +1,11 @@
-# K6 Performance Test Suite
+# K6 Performance Testing Framework
 
+[![K6 Smoke Test](https://github.com/Sand5/k6-performance/actions/workflows/k6.yml/badge.svg)](https://github.com/Sand5/k6-performance/actions/workflows/k6.yml)
+![Node.js](https://img.shields.io/badge/node-20.x-brightgreen?logo=node.js)
+![Last Commit](https://img.shields.io/github/last-commit/Sand5/k6-performance)
+[![Docker Image](https://img.shields.io/badge/docker-ready-blue?logo=docker)](https://hub.docker.com/)
+
+Containerised k6 performance testing framework using Docker Compose and GitHub Actions CI.
 This project contains performance tests for your API using [k6](https://k6.io/).
 
 # Project Structure
