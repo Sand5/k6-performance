@@ -1,9 +1,5 @@
-version: "3.9"
-
 services:
-  # ----------------------------
   # Local mock API
-  # ----------------------------
   mock-local:
     build: .
     container_name: mock-local
@@ -11,16 +7,15 @@ services:
       - "3000:3000"
     environment:
       - PORT=3000
+    command: sh -c "json-server --watch k6-tests/db.json --port 3000"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/posts || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/posts || exit 1"]
       interval: 5s
       timeout: 3s
       retries: 5
       start_period: 5s
 
-  # ----------------------------
   # QA mock API
-  # ----------------------------
   mock-qa:
     build: .
     container_name: mock-qa
@@ -28,26 +23,37 @@ services:
       - "4000:4000"
     environment:
       - PORT=4000
+    command: sh -c "json-server --watch k6-tests/db.json --port 4000"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4000/posts || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:4000/posts || exit 1"]
       interval: 5s
       timeout: 3s
       retries: 5
       start_period: 5s
 
-  # ----------------------------
-  # K6 test runner
-  # ----------------------------
-  k6:
+  # K6 test runner (Local)
+  k6-local:
     build: .
-    container_name: k6-tests
+    container_name: k6-tests-local
     environment:
       - DOCKER=true
-      # Point K6 to the mock container
-      - BASE_URL=http://mock-local:3000
-      - CURRENT_ENV=local
+      - ENV=local
     depends_on:
       mock-local:
+        condition: service_healthy
+    volumes:
+      - ./k6-tests:/app/k6-tests
+    command: sh -c "npm run k6:smoke"
+
+  # K6 test runner (QA)
+  k6-qa:
+    build: .
+    container_name: k6-tests-qa
+    environment:
+      - DOCKER=true
+      - ENV=qa
+    depends_on:
+      mock-qa:
         condition: service_healthy
     volumes:
       - ./k6-tests:/app/k6-tests

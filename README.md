@@ -119,9 +119,40 @@ npm run mock:api & wait-on http://localhost:3000 && npm run k6:smoke
 Compose starts the mock API as a named service (e.g., mock-local or mock-qa), 
 so k6 connects using the service name instead of localhost. 
 
-Example: docker-compose up -d mock-local
-docker run --rm -v $(pwd)/k6-tests/reports:/app/k6-tests/reports -e ENV=local k6-tests sh -c "npx wait-on http://mock-local:3000 && npm run k6:smoke"
-docker-compose down
+# Start the mock service
+This will start your local mock API container(mock-local) in detached mode so it runs in the background
+docker compose up -d mock-local
+
+# Check the status of the mock service
+You can check which containers are running and there health 
+docker ps
+docker inspect --format='{{json .State.Health}}' mock-local
+
+# Run k6 tests inside the container
+Even though the container started,json-server may takes a second to be ready you can use wait-on inside the container
+docker compose run --rm -e ENV=local -e DOCKER=true k6 \
+sh -c "npx wait-on http://mock-local:3000 && npm run k6:smoke:local:docker"
+
+# Tear down services when done
+docker compose down
+
+# Start a shell termimal inside the k6 container 
+Instead of running docker compose run with a command you can start an interactive shell inside the container 
+## Start mock API
+docker compose up -d mock-local
+
+## Open interactive shell in k6 container
+docker compose run --rm -e ENV=local -e DOCKER=true k6 /bin/sh
+
+## Inside the container
+npx wait-on http://mock-local:3000
+npm run k6:smoke
+
+## Exit when done
+exit
+
+## Tear down services (optional)
+docker compose down
 
 # Why Docker?
 

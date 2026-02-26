@@ -8,8 +8,8 @@ FROM grafana/k6:latest
 # --------------------------------------------------
 USER root
 
-# Install Node.js + npm
-RUN apk add --no-cache nodejs npm
+# Install Node.js + npm + curl
+RUN apk add --no-cache nodejs npm curl
 
 # Install global packages: json-server + wait-on
 RUN npm install -g json-server wait-on
@@ -43,11 +43,3 @@ EXPOSE 3000 5665
 # Use shell entrypoint
 # --------------------------------------------------
 ENTRYPOINT []
-
-# --------------------------------------------------
-# Default command:
-# 1. Start mock API in background
-# 2. Wait until localhost:3000 is ready
-# 3. Run k6 smoke test
-# --------------------------------------------------
-CMD ["sh", "-c", "json-server --watch db.json --port 3000 & npx wait-on http://localhost:3000 && npm run k6:smoke"]

@@ -11,17 +11,26 @@ jobs:
   smoke-local:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build & run Local environment
+      - name: Build & start Local mock
         run: |
           docker compose up --build -d mock-local
-          sleep 3
+
+      - name: Wait for Local API
+        run: |
           npx wait-on http://localhost:3000 --timeout 120000 --interval 2000
-          docker compose run --rm -e ENV=local k6
-          docker compose down --volumes --remove-orphans
+
+      - name: Run K6 Smoke (Local)
+        run: |
+          docker compose run --rm k6-local
+
+      - name: Tear down containers
+        if: always()
+        run: docker compose down --volumes --remove-orphans
 
       - name: Upload Local reports
         uses: actions/upload-artifact@v4
@@ -32,18 +41,26 @@ jobs:
   smoke-qa:
     runs-on: ubuntu-latest
     timeout-minutes: 25
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build & run QA environment
+      - name: Build & start QA mock
         run: |
           docker compose up --build -d mock-qa
-          sleep 5
-          # Retry loop to wait until the mock server responds
+
+      - name: Wait for QA API
+        run: |
           npx wait-on http://localhost:4000 --timeout 180000 --interval 2000
-          docker compose run --rm -e ENV=qa k6
-          docker compose down --volumes --remove-orphans
+
+      - name: Run K6 Smoke (QA)
+        run: |
+          docker compose run --rm k6-qa
+
+      - name: Tear down containers
+        if: always()
+        run: docker compose down --volumes --remove-orphans
 
       - name: Upload QA reports
         uses: actions/upload-artifact@v4
