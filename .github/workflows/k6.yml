@@ -16,6 +16,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install Node.js & dependencies
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+      - run: npm install
+
+      - name: Run ESLint
+        run: npm run lint
+
       - name: Build & start Local mock
         run: |
           docker compose up --build -d mock-local
@@ -45,6 +54,15 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Install Node.js & dependencies
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+      - run: npm install
+
+      - name: Run ESLint
+        run: npm run lint
 
       - name: Build & start QA mock
         run: |
