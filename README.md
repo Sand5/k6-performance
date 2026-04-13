@@ -6,6 +6,7 @@
 [![Docker Image](https://img.shields.io/badge/docker-ready-blue?logo=docker)](https://hub.docker.com/)
 
 > A containerised, scalable performance testing framework built with using [k6](https://k6.io/), [Docker](https://www.docker.com/), and [GitHub Actions](https://github.com/features/actions).  
+
 > Designed to support multiple test strategies including smoke, load, stress, spike, and soak testing for API services.
 
 ## Project Structure
