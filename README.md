@@ -11,6 +11,7 @@
 
 ## Project Structure
 
+```
 k6_performance/
 ├── .github/
 │   └── workflows/
