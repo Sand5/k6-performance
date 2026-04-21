@@ -11,29 +11,12 @@
 
 ## Project Structure
 
-```text
 k6_performance/
 ├── .github/
 │   └── workflows/
 │       └── k6-performance.yml     # GitHub Actions CI workflow for k6 tests
 ├── .vscode/
 │   └── settings.json              # VS Code workspace settings
-├── basic-k6/                      # Intro / standalone k6 script examples
-│   ├── breakpoint-test.js         # Breakpoint-based test example
-│   ├── custom-metrics.js          # Custom metrics example
-│   ├── first-script.js            # Basic k6 script starter
-│   ├── load-test.js               # Load testing example
-│   ├── scenarios.js               # Scenario configuration examples
-│   ├── smoke-test.js              # Smoke test example
-│   ├── soak-test.js               # Soak/endurance test example
-│   ├── spike-test.js              # Spike test example
-│   ├── stress-test.js             # Stress test example
-│   └── system-tags.js             # System tags usage example
-├── http-k6/                       # HTTP-specific k6 examples
-│   ├── env-var.js                 # Environment variable usage
-│   ├── http-get.js                # GET request example
-│   ├── http-post.js               # POST request example
-│   └── random-item.js             # Randomized data requests
 ├── k6-tests/                      # Main structured test framework
 │   ├── config/
 │   │   ├── environments.js        # Environment-specific base URLs
