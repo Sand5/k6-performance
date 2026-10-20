@@ -14,10 +14,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install Node.js & dependencies
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v5
         with:
           node-version: 20
       - run: npm install
@@ -42,7 +42,7 @@ jobs:
         run: docker compose down --volumes --remove-orphans
 
       - name: Upload Local reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: k6-reports-local
           path: k6-tests/reports/
@@ -53,10 +53,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install Node.js & dependencies
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v5
         with:
           node-version: 20
       - run: npm install
@@ -81,7 +81,7 @@ jobs:
         run: docker compose down --volumes --remove-orphans
 
       - name: Upload QA reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: k6-reports-qa
           path: k6-tests/reports/
