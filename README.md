@@ -1,21 +1,24 @@
 # K6 Performance Testing Framework
 
 [![K6 Smoke Test](https://github.com/Sand5/k6-performance/actions/workflows/k6.yml/badge.svg?branch=main)](https://github.com/Sand5/k6-performance/actions/workflows/k6.yml)
+
 ![Node.js](https://img.shields.io/badge/node-20.x-brightgreen?logo=node.js)
+
 ![Last Commit](https://img.shields.io/github/last-commit/Sand5/k6-performance)
+
 [![Docker Image](https://img.shields.io/badge/docker-ready-blue?logo=docker)](https://hub.docker.com/)
 
-> A containerised, scalable performance testing framework built with using [k6](https://k6.io/), [Docker](https://www.docker.com/), and [GitHub Actions](https://github.com/features/actions).  
+A containerised API performance testing framework built with [Grafana k6](https://k6.io/), [Docker](https://www.docker.com/) and [GitHub Actions](https://github.com/features/actions).
 
-> Designed to support multiple test strategies including smoke, load, stress, spike, and soak testing for API services.
+The framework supports **smoke, load and spike testing** against a JSON Server mock REST API, with environment-specific configuration, reusable test scenarios, performance thresholds, HTML reports and automated CI execution.
 
 ## Project Structure
 
-```
+```text
 k6_performance/
 ├── .github/
 │   └── workflows/
-│       └── k6-performance.yml     # GitHub Actions CI workflow for k6 tests
+│       └── k6.yml     # GitHub Actions CI workflow for k6 tests
 ├── .vscode/
 │   └── settings.json              # VS Code workspace settings
 ├── k6-tests/                      # Main structured test framework
@@ -45,156 +48,283 @@ k6_performance/
 ├── package-lock.json              # npm dependency lock file
 └── package.json                   # npm scripts and dependencies
 ```
-DELETE requests are expected to return 200 instead of 204 due to API behavior.
-
-**Make sure your server is running locally before running the tests.**
-
 
 ## How to Run Tests
 
-1. Install dependencies:
+### 1. Install Dependencies
+
+Install the project dependencies:
+
+```bash
 npm install
+```
 
-2. Run the smoke,spike,load test with dashboard:
-npm run k6:smoke or npm run k6:smoke:local - This command also starts the sever
-Generates a report in k6-tests/reports/smoke-report.html and launches a local K6 dashboard.
+Ensure that k6 is installed and available on your system if running tests directly without Docker.
 
-- Note: The mock API logs every request by default, which can be verbose.
-  To reduce console output, you can run the mock API in “quiet” mode:
+### 2. Start the Mock API
 
-- npm run mock:api -- --quiet
+Open a terminal and start JSON Server:
 
-- npm run k6:spike or npm run k6:spike:local
-  Generates a report in k6-tests/reports/spike-report.html and launches a local K6 dashboard.
+```bash
+npm run mock:api
+```
 
-- npm run k6:load or npm run k6:load:local
-  Generates a report in k6-tests/reports/smoke-report.html and launches a local K6 dashboard.
+This starts the mock REST API at `http://localhost:3000`.
 
+To suppress mock API console output, use:
 
-3. When run in CI, the smoke test generates an HTML report that is uploaded 
-as a GitHub Actions artifact. Download it from the workflow run summary.
+```bash
+npm run mock:api:quiet
+```
+
+Keep the mock API running while executing your performance tests.
+
+### 3. Run Performance Tests
+
+Open a second terminal and run one of the following:
+
+#### Smoke Test
+
+```bash
+npm run k6:smoke
+```
+
+Generates `k6-tests/reports/smoke-report.html`.
+
+#### Load Test
+
+```bash
+npm run k6:load
+```
+
+Generates `k6-tests/reports/load-report.html`.
+
+#### Spike Test
+
+```bash
+npm run k6:spike
+```
+
+Generates `k6-tests/reports/spike-report.html`.
+
+Each command enables the k6 web dashboard and exports an HTML report.
+
+### 4. CI Reports
+
+When executed through GitHub Actions, the smoke test generates an HTML report that is uploaded as a workflow artifact.
+
+The report can be downloaded from the GitHub Actions workflow run summary.
 
 ## Docker
 
-1. Build the Docker image
+Docker allows the framework to run without installing k6 or Node.js directly on your machine.
+
+### 1. Build the Docker Image
+
+From the project root directory, run:
+
+```bash
 docker build -t k6-tests .
-(Note Run this command in the same directory as your Dockerfile.)
+```
 
--t k6-tests gives the image a friendly name.
+This builds the Docker image using the project's `Dockerfile`.
 
+### 2. Run the Smoke Test with the Mock API
 
-2. Run Smoke Test with Mock API (single environment)
+Run the mock API and k6 smoke test inside a single container:
+
+```bash
 docker run --rm -it \
-  -p 3000:3000 \       # mock API
-  -p 5665:5665 \       # k6 dashboard
-  -v $(pwd)/k6-tests/reports:/app/k6-tests/reports \
-  k6-tests
+  -p 3000:3000 \
+  -p 5665:5665 \
+  -v "$(pwd)/k6-tests/reports:/app/k6-tests/reports" \
+  k6-tests \
+  sh -c 'npm run mock:api & npx wait-on http://localhost:3000 && npm run k6:smoke'
+```
 
-  What happens:
+**What happens:**
 
-1. Starts the mock API (json-server) in the container
-2. Waits for port 3000 to be ready
-3. Runs k6 smoke test with dashboard + HTML report
-4. HTML report is saved locally in k6-tests/reports
-5. Container is removed automatically when finished
+1. JSON Server starts inside the container on port `3000`.
+2. `wait-on` waits until the mock API is ready.
+3. k6 executes the smoke test against the mock API.
+4. The HTML report is saved to `k6-tests/reports/smoke-report.html` on your machine.
+5. The container is automatically removed after execution.
 
-  or 
-  docker run --rm -it -p 3000:3000 -p 5665:5665 k6-tests -
-  (Reports will not saved locally and deleted from the container)
+**Ports:**
 
-4. Run Multiple Environments with Docker Compose
-## Local environment
-ENV_NAME=local docker-compose up -d mock-local
-docker compose run --rm -v $(pwd)/k6-tests/reports:/app/k6-tests/reports -e ENV=$ENV_NAME k6 sh -c "npx wait-on http://mock-local:3000 && npm run k6:smoke"
-docker-compose down
+| Port | Purpose |
+| --- | --- |
+| `3000` | Mock API |
+| `5665` | k6 web dashboard |
 
-## QA environment
-ENV_NAME=qa docker-compose up -d mock-qa
-docker compose run --rm -v $(pwd)/k6-tests/reports:/app/k6-tests/reports -e ENV=$ENV_NAME k6 sh -c "npx wait-on http://mock-qa:4000 && npm run k6:smoke"
-docker-compose down
+The k6 dashboard is enabled during the test. To access it from the host machine, the dashboard must listen on `0.0.0.0` inside the container.
 
-Notes:
-mock-local → uses port 3000
-mock-qa → uses port 4000
-Reports are saved locally for each run under k6-tests/reports
-Docker Compose ensures multiple mock APIs can run independently and be torn down after tests
-Change the ENV variable to switch which environment your k6 tests target
+The Dockerfile does not define a default `CMD`. The test command is supplied explicitly using `docker run`.
 
-## Default Docker Behavior
-Running the Dockerfile directly runs default CMD in your Dockerfile:
-npm run mock:api & wait-on http://localhost:3000 && npm run k6:smoke
+## Running Tests with Docker Compose
 
-## Default Docker Compose Behavior
-Compose starts the mock API as a named service (e.g., mock-local or mock-qa), 
-so k6 connects using the service name instead of localhost. 
+Docker Compose runs the mock API and k6 test runner in separate containers connected through a Docker network.
 
-## Start the mock service
-This will start your local mock API container(mock-local) in detached mode so it runs in the background
-docker compose up -d mock-local
+### Local Environment
 
-## Check the status of the mock service
-You can check which containers are running and there health 
-docker ps
-docker inspect --format='{{json .State.Health}}' mock-local
+**1. Build and start the local mock API:**
 
-## Run k6 tests inside the container
-Even though the container started,json-server may takes a second to be ready you can use wait-on inside the container
-docker compose run --rm -e ENV=local -e DOCKER=true k6 \
-sh -c "npx wait-on http://mock-local:3000 && npm run k6:smoke:local:docker"
+```bash
+docker compose up --build -d mock-local
+```
 
-## Tear down services when done
+The local mock API runs on port `3000`.
+
+**2. Execute the local smoke test:**
+
+```bash
+docker compose run --rm k6-local
+```
+
+This executes `smoke.test.js` with `ENV=local` and `DOCKER=true`, targeting `http://mock-local:3000`.
+
+**3. Stop and remove the containers:**
+
+```bash
 docker compose down
+```
 
-## Start a shell termimal inside the k6 container 
-Instead of running docker compose run with a command you can start an interactive shell inside the container 
-## Start mock API
-docker compose up -d mock-local
+### QA Environment
 
-## Open interactive shell in k6 container
-docker compose run --rm -e ENV=local -e DOCKER=true k6 /bin/sh
+**1. Build and start the QA mock API:**
 
-## Inside the container
-npx wait-on http://mock-local:3000
-npm run k6:smoke
+```bash
+docker compose up --build -d mock-qa
+```
 
-## Exit when done
-exit
+The QA mock API runs on port `4000`.
 
-## Tear down services (optional)
+**2. Execute the QA smoke test:**
+
+```bash
+docker compose run --rm k6-qa
+```
+
+This executes `smoke.test.js` with `ENV=qa` and `DOCKER=true`, targeting `http://mock-qa:4000`.
+
+**3. Stop and remove the containers:**
+
+```bash
 docker compose down
+```
+
+### Test Reports
+
+Both environments generate the HTML report at:
+
+```text
+k6-tests/reports/smoke-report.html
+```
+
+The report is saved locally through the Docker Compose volume mount.
+
+**Note:** Running the QA smoke test after the local smoke test overwrites the existing smoke report because both environments use the same filename.
+
+Docker Compose waits for the corresponding mock API to pass its health check before starting the k6 test runner.
+
+## Dockerfile vs Docker Compose
+
+The **Dockerfile** defines how the Docker image is built, including the k6 runtime, Node.js, npm and required dependencies.
+
+The Dockerfile does not specify a default `CMD`. Instead, the command to execute is provided explicitly when starting a container.
+
+**Docker Compose** defines and manages the services required for testing, including the mock API and k6 test runners.
+
+It provides:
+
+- Separate local and QA environments.
+- Docker networking between the mock API and k6 containers.
+- Health checks to ensure the mock API is ready before tests begin.
+- Volume mounts to save generated HTML reports locally.
+
+Use `docker build` and `docker run` for standalone container execution, or `docker compose` to orchestrate the mock API and test runner as separate services.
 
 ## Why Docker?
 
-Using Docker demonstrates professional best practices:
+Docker provides a consistent, reproducible environment for running performance tests.
 
-- Ensures **consistent k6 and Node.js environment** across machines  
-- Allows **reproducible performance tests** without installing dependencies  
-- Mirrors **real-world DevOps pipelines** (CI/CD often runs in containers)  
-- Separates local development from test execution, avoiding conflicts  
+Key benefits include:
+
+- **Consistency:** Runs k6 and its dependencies in a containerised environment.
+- **Reproducibility:** Reduces differences between developers' machines and CI environments.
+- **Isolation:** Keeps the mock API and k6 test runner separate when using Docker Compose.
+- **CI/CD integration:** Supports automated performance testing through GitHub Actions.
+- **Portability:** Allows the framework to run on any machine with a compatible Docker installation.
 
 ## Standard Checks
 
-All responses are validated using standardChecks:
+The framework uses reusable `standardChecks` to validate API responses during performance tests.
 
-Status code is between 200–299
-Response time is less than 500ms
-Logs failures to console for debugging
+These checks include:
 
-## Metrics
+- **HTTP status:** Verifies that responses return a successful status code (200–299).
+- **Response time:** Checks that responses complete within 500 ms.
+- **Failure logging:** Logs unsuccessful requests to the console to assist with debugging.
 
-This project tracks several custom metrics in K6:
+These checks help identify functional failures alongside performance issues.
 
-- `custom_error_rate` – counts failed requests
-- `custom_requests_count` – counts total requests
-- `login_duration` – Trend metric that measures login request duration
+## Custom Metrics
 
-Example of how a metric is defined:
+The framework uses custom k6 metrics to monitor API performance and track test activity.
 
-import { Trend } from 'k6/metrics';
+| Metric | Type | Description |
+| --- | --- | --- |
+| `custom_error_rate` | Counter | Tracks errors recorded during test execution. |
+| `custom_requests_count` | Counter | Counts requests tracked by the framework. |
+| `login_duration` | Trend | Measures login-related request durations. |
+
+### Example Metric Definitions
+
+The metrics are defined using the k6 metrics API:
+
+```javascript
+import { Counter, Trend } from 'k6/metrics';
 
 export const loginDuration = new Trend('login_duration');
 export const errorRate = new Counter('custom_error_rate');
 export const requestsCount = new Counter('custom_requests_count');
+```
 
-## Notes 
-DELETE requests are expected to return 200 instead of 204 due to API behavior. Make sure your server is running locally before running the tests.
+The custom metrics complement k6's built-in measurements, such as `http_req_duration`, `http_req_failed` and `http_reqs`.
+
+Performance thresholds are used to determine whether response-time requirements have been met.
+
+## Notes
+
+- **DELETE responses:** The mock API returns HTTP `200` for successful DELETE requests rather than `204`. The framework's checks account for this behaviour.
+- **Running tests locally:** Start the mock API before executing k6 tests directly with npm.
+- **Running tests with Docker:** The standalone Docker command starts the mock API and test runner in the same container.
+- **Running tests with Docker Compose:** The mock API and k6 runner execute in separate containers, with health checks ensuring the API is ready before testing.
+
+## Mock API (JSON Server)
+
+This framework uses [JSON Server](https://github.com/typicode/json-server) to provide a lightweight REST API for performance testing without requiring an external backend service.
+
+JSON Server reads the test data from `k6-tests/db.json` and exposes REST endpoints for API testing.
+
+The mock API supports CRUD operations (Create, Read, Update and Delete), allowing k6 to execute smoke, load and spike tests against a controlled environment.
+
+### Environment Configuration
+
+| Environment | Port | Docker Hostname | Docker Compose Support |
+| --- | --- | --- | --- |
+| Local | `3000` | `mock-local` | Yes |
+| QA | `4000` | `mock-qa` | Yes |
+| Prod | `5000` | `mock-prod` | Not currently configured |
+
+The framework's `environments.js` supports local, QA and prod environment URLs.
+
+However, the current `docker-compose.yml` defines mock API and k6 runner services for **local and QA only**. A `mock-prod` service would need to be added before running the prod environment through Docker Compose.
+
+### Mock API Execution
+
+- **Local npm execution:** JSON Server runs directly on the host machine.
+- **Standalone Docker:** JSON Server and k6 run inside the same container.
+- **Docker Compose:** JSON Server and k6 run in separate containers connected through a Docker network.
+
+**Important:** JSON Server is a mock API, not a production backend. Performance results demonstrate the framework's testing capabilities and should not be interpreted as representative of a real production application's performance.
